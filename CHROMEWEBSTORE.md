@@ -2,8 +2,7 @@
 
 > Last updated: 2026-10-08
 >
-> Everything the Chrome Developer Dashboard asks for, ready to paste. `<repo>` stands for the
-> GitHub repository (owner/name) once it exists.
+> Everything the Chrome Developer Dashboard asks for, ready to paste.
 
 ## Store listing
 
@@ -30,7 +29,7 @@ How to use it:
 
 Privacy: images are converted on your device and are never sent anywhere by the extension. It has no analytics and makes no network requests of its own. It can only see the sites you add, and only after you allow it.
 
-Source code and support: https://github.com/<repo>
+Source code and support: https://github.com/bidgrupa/webpify
 ```
 
 **Category**
@@ -76,7 +75,7 @@ Data use certification:
 - [x] Data is not used for purposes unrelated to the extension's core functionality.
 - [x] Data is not used for creditworthiness or lending purposes.
 
-**Privacy policy URL:** `https://github.com/<repo>/blob/main/PRIVACY.md`. Check that the link opens before submitting.
+**Privacy policy URL:** `https://github.com/bidgrupa/webpify/blob/main/PRIVACY.md`. Check that the link opens before submitting.
 
 ## Distribution
 
@@ -87,8 +86,8 @@ Data use certification:
 
 - **Publisher:** a BID-owned group publisher account rather than a personal one, so the listing doesn't depend on one person's account.
 - **Contact email:** ⬜ a monitored team address. It is shown publicly, and Google sends policy notices to it.
-- **Support URL:** `https://github.com/<repo>/issues`
-- **Homepage:** `https://github.com/<repo>`
+- **Support URL:** `https://github.com/bidgrupa/webpify/issues`
+- **Homepage:** `https://github.com/bidgrupa/webpify`
 
 ## Version history
 

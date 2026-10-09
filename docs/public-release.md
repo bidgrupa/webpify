@@ -12,8 +12,8 @@ Kept for later. webpify is currently shared internally through GitHub Releases (
 ## Before the first store submission
 
 - **Licence.** The extension is AGPL-3.0-only because of zenwebp, so the source has to be available to everyone who gets it. The release workflow attaches the source zip to every release; also link the repository from the store listing. If the AGPL ever becomes a problem: zenwebp 0.1.0–0.2.1 were MIT/Apache (an older, slower encoder), or Imazen sells a commercial licence.
-- **Listing text.** [CHROMEWEBSTORE.md](../CHROMEWEBSTORE.md) has the description, single purpose, permission justifications and data-use answers, ready to paste. Replace `<repo>` with the real repository.
-- **Privacy policy.** [PRIVACY.md](../PRIVACY.md). Its GitHub URL (`https://github.com/<repo>/blob/main/PRIVACY.md`) works as the policy link, but the repository must be public for that.
+- **Listing text.** [CHROMEWEBSTORE.md](../CHROMEWEBSTORE.md) has the description, single purpose, permission justifications and data-use answers, ready to paste.
+- **Privacy policy.** [PRIVACY.md](../PRIVACY.md). Its GitHub URL (`https://github.com/bidgrupa/webpify/blob/main/PRIVACY.md`) works as the policy link (the repository is public).
 - **Screenshots.** At least one at 1280×800 (see CHROMEWEBSTORE.md for what to show).
 - **Accounts.** Both should be owned by BID, not a person:
   - Chrome Web Store developer account (one-time $5; a group publisher is best) with a monitored contact email.

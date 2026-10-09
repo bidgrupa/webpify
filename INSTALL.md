@@ -115,16 +115,17 @@ Ask the person who looks after webpify for a signed version if you need it every
 
 ## Choose your sites
 
-webpify only works on sites you add. Do this once per site.
+webpify only works on sites you add. For our Lauris CMS, add both the live and the stage address. Do this once per site:
 
 1. Click the **webpify** icon. The settings page opens.
-2. Under **Sites**, in **Page pattern**, type the site's address with `/*` at the end, for example:
-   `https://cms.example.com/*`
-   Ask your team lead for the exact address of our CMS if you're not sure.
+2. Under **Sites**, next to **Lauris CMS**, click **admin.lauris.io**. This fills in `https://admin.lauris.io/*` for you.
 3. Leave **Input / drop zone selector** empty.
 4. Click **Add site**.
 5. Your browser asks for permission to access that site. Click **Allow**.
-6. Reload any tabs where that site is already open.
+6. Repeat steps 2–5 with **admin-stage.lauris.io** (`https://admin-stage.lauris.io/*`).
+7. Reload any tabs where the CMS is already open.
+
+For any other site, type its address in **Page pattern** with `/*` at the end (for example `https://www.example.com/*`) instead of clicking a preset.
 
 That's it. Upload images as you normally would. A small dark notice in the bottom-right corner of the page shows that webpify is converting them and how much smaller they got.
 
