@@ -13,7 +13,11 @@ cd "$(dirname "$0")"
 cargo_home="${CARGO_HOME:-$HOME/.cargo}"
 export CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_RUSTFLAGS="-C target-feature=+simd128 --remap-path-prefix=$PWD=/webpify --remap-path-prefix=$cargo_home=/cargo"
 
-cargo build --release --locked --target wasm32-unknown-unknown
+# zenwebp's error links embed a commit id from GIT_COMMIT, GITHUB_SHA or CI_COMMIT_SHA when
+# one is set, else "v<zenwebp version>". CI always sets GITHUB_SHA, so clear them: otherwise
+# GitHub's build and everyone else's differ.
+env -u GIT_COMMIT -u GITHUB_SHA -u CI_COMMIT_SHA \
+  cargo build --release --locked --target wasm32-unknown-unknown
 
 # --target web: ES module glue, imported by the background script.
 # --force-enable-abort-handler: lets the module rebuild itself after a panic

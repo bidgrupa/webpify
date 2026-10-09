@@ -46,4 +46,4 @@ Mozilla's reviewers must get byte-identical output from the source zip. This is 
 - `build.sh` maps local paths away with `--remap-path-prefix`.
 - The wasm-bindgen CLI is pinned to 0.2.129.
 
-Building from a second checkout gave an identical `.wasm`. The reviewer steps are in the README under "Building from source".
+GitHub's release build of v0.1.0 matched a local build except for one string: zenwebp embeds `GITHUB_SHA` when it's set. `build.sh` clears that variable since v0.1.0, so from the next release on, CI, local and reviewer builds should be byte-identical. Check this on the first release you submit to Mozilla. The reviewer steps are in the README under "Building from source".
