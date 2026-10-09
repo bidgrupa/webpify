@@ -6,15 +6,24 @@ const { DEFAULTS, DEFAULT_SELECTOR } = globalThis.webpify;
 
 const settingsForm = document.getElementById("settings");
 const qualityValue = document.getElementById("quality-value");
-const settingsStatus = document.getElementById("settings-status");
-const sitesBody = document.getElementById("sites");
+const sitesList = document.getElementById("sites");
 const noSites = document.getElementById("no-sites");
 const addForm = document.getElementById("add-site");
 const sitesStatus = document.getElementById("sites-status");
+const savedToast = document.querySelector(".saved");
 
-function setStatus(element, message, kind) {
-  element.textContent = message;
-  element.className = `status ${kind}`;
+/** One line under the add-site form; `ok` in orange ink, otherwise as an error. */
+function setStatus(message, ok) {
+  sitesStatus.textContent = message;
+  sitesStatus.className = `status ${ok ? "is-ok" : "is-bad"}`;
+}
+
+// Settings save as they change; the "Saved" pill confirms it for 1.2 s.
+let savedTimer = 0;
+function flashSaved() {
+  savedToast.classList.add("is-visible");
+  clearTimeout(savedTimer);
+  savedTimer = setTimeout(() => savedToast.classList.remove("is-visible"), 1200);
 }
 
 // --- Conversion settings -----------------------------------------------------
@@ -39,7 +48,7 @@ settingsForm.addEventListener("input", async () => {
     lossless: fields.lossless.checked,
     keepIfLarger: fields.keepIfLarger.checked,
   });
-  setStatus(settingsStatus, "Saved.", "ok");
+  flashSaved();
 });
 
 // --- Sites -------------------------------------------------------------------
@@ -51,43 +60,55 @@ async function getSites() {
 
 async function renderSites() {
   const sites = await getSites();
-  sitesBody.replaceChildren(...(await Promise.all(sites.map(siteRow))));
+  sitesList.replaceChildren(...(await Promise.all(sites.map(siteRow))));
   noSites.hidden = sites.length > 0;
 }
 
+/** One site: its address, which upload fields it covers, whether access is granted, and actions. */
 async function siteRow(site) {
   const granted = await api.permissions.contains({ origins: [site.pattern] });
-  const row = document.createElement("tr");
+  const row = document.createElement("li");
 
-  const access = document.createElement("td");
-  if (granted) {
-    access.textContent = "Granted";
+  const main = document.createElement("div");
+  main.className = "row-main";
+  const title = document.createElement("span");
+  title.className = "row-title";
+  title.textContent = site.pattern;
+
+  const meta = document.createElement("div");
+  meta.className = "row-meta";
+  const fields = document.createElement("span");
+  if (!site.selector || site.selector === DEFAULT_SELECTOR) {
+    fields.textContent = "All upload fields and Dropzone areas";
   } else {
-    const grant = document.createElement("button");
-    grant.type = "button";
-    grant.textContent = "Grant";
-    // permissions.request must run directly in the click handler.
-    grant.addEventListener("click", () => api.permissions.request({ origins: [site.pattern] }).then(renderSites));
-    access.append(grant);
+    const code = document.createElement("code");
+    code.textContent = site.selector;
+    fields.append("Upload fields: ", code);
   }
+  const access = document.createElement("span");
+  access.className = `tag ${granted ? "is-ok" : "is-bad"}`;
+  access.textContent = granted ? "Access granted" : "No access";
+  meta.append(fields, access);
+  main.append(title, meta);
+  row.append(main);
 
-  const actions = document.createElement("td");
-  const remove = document.createElement("button");
-  remove.type = "button";
-  remove.textContent = "Remove";
-  remove.addEventListener("click", () => removeSite(site.pattern));
-  actions.append(remove);
-
-  row.append(codeCell(site.pattern), codeCell(site.selector), access, actions);
+  if (!granted) {
+    // permissions.request must run directly in the click handler.
+    row.append(
+      button("Grant access", () => api.permissions.request({ origins: [site.pattern] }).then(renderSites)),
+    );
+  }
+  row.append(button("Remove", () => removeSite(site.pattern)));
   return row;
 }
 
-function codeCell(text) {
-  const cell = document.createElement("td");
-  const code = document.createElement("code");
-  code.textContent = text;
-  cell.append(code);
-  return cell;
+function button(label, onClick) {
+  const element = document.createElement("button");
+  element.type = "button";
+  element.className = "btn btn--small";
+  element.textContent = label;
+  element.addEventListener("click", onClick);
+  return element;
 }
 
 function isValidSelector(selector) {
@@ -104,7 +125,7 @@ addForm.addEventListener("submit", (event) => {
   const pattern = addForm.elements.pattern.value.trim();
   const selector = addForm.elements.selector.value.trim() || DEFAULT_SELECTOR;
   if (!isValidSelector(selector)) {
-    setStatus(sitesStatus, `"${selector}" is not a valid CSS selector.`, "error");
+    setStatus(`"${selector}" isn't a valid CSS selector. Nothing was added.`, false);
     return;
   }
   // The browser only shows the permission prompt during the click itself, so
@@ -113,23 +134,28 @@ addForm.addEventListener("submit", (event) => {
   try {
     request = api.permissions.request({ origins: [pattern] });
   } catch (error) {
-    setStatus(sitesStatus, `Invalid page pattern: ${error.message}`, "error");
+    badAddress(error);
     return;
   }
   request.then(
     async (granted) => {
       if (!granted) {
-        setStatus(sitesStatus, "Access to that site was not granted.", "error");
+        setStatus("Access to that site wasn't allowed, so it wasn't added.", false);
         return;
       }
       const sites = (await getSites()).filter((site) => site.pattern !== pattern);
       await api.storage.local.set({ sites: [...sites, { pattern, selector }] });
       addForm.reset();
-      setStatus(sitesStatus, `Added ${pattern}. Reload tabs that are already open on it.`, "ok");
+      setStatus(`Added ${pattern}. Reload tabs that are already open on it.`, true);
     },
-    (error) => setStatus(sitesStatus, `Invalid page pattern: ${error.message}`, "error"),
+    badAddress,
   );
 });
+
+function badAddress(error) {
+  console.warn("[webpify] page address rejected:", error);
+  setStatus("That page address doesn't work. Use the full address ending in /*, for example https://admin.lauris.io/*.", false);
+}
 
 async function removeSite(pattern) {
   const sites = (await getSites()).filter((site) => site.pattern !== pattern);
@@ -139,13 +165,13 @@ async function removeSite(pattern) {
   } catch (error) {
     console.warn("[webpify] could not drop the site permission:", error);
   }
-  setStatus(sitesStatus, `Removed ${pattern}.`, "ok");
+  setStatus(`Removed ${pattern}.`, true);
 }
 
 for (const preset of document.querySelectorAll("[data-pattern]")) {
   preset.addEventListener("click", () => {
     addForm.elements.pattern.value = preset.dataset.pattern;
-    addForm.elements.selector.focus();
+    addForm.querySelector('[type="submit"]').focus();
   });
 }
 

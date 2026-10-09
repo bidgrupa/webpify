@@ -4,86 +4,102 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>webpify settings</title>
+    <link rel="stylesheet" href="styles/page.css" />
     <link rel="stylesheet" href="options.css" />
   </head>
   <body>
-    <main>
-      <h1>webpify</h1>
-      <p class="lead">
-        Images you pick in a matching file input are converted to WebP before the page sees them.
-        JPEG, PNG and BMP are converted; other files pass through unchanged.
-      </p>
+    <header class="masthead">
+      <div class="wrap masthead-inner">
+        <!-- The webpify mark (assets/mark.svg): a photo frame rising into an upload arrow. -->
+        <svg class="mark" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M10.25 4.75H5.25a2.5 2.5 0 0 0-2.5 2.5v7.5a2.5 2.5 0 0 0 2.5 2.5h7.5a2.5 2.5 0 0 0 2.5-2.5V2.25" />
+          <path d="M12.5 5l2.75-2.75L18 5" />
+          <path d="M5.5 14.25l3.25-3.5 3.25 3.5" />
+          <circle cx="11.75" cy="8.25" r="1.25" fill="currentColor" stroke="none" />
+        </svg>
+        <div>
+          <h1>webpify</h1>
+          <p>Converts the images you upload to WebP, on the sites you choose, before the site receives them.</p>
+        </div>
+      </div>
+    </header>
 
-      <section aria-labelledby="conversion-heading">
-        <h2 id="conversion-heading">Conversion</h2>
-        <form id="settings">
-          <label class="row">
-            <span>Quality</span>
-            <input type="range" name="quality" min="1" max="100" />
-            <output id="quality-value"></output>
-          </label>
-          <label class="row">
-            <span>Max width/height (px)</span>
-            <input type="number" name="maxDimension" min="0" step="1" inputmode="numeric" />
-            <small>0 keeps the original size</small>
-          </label>
-          <label class="check">
-            <input type="checkbox" name="lossless" />
-            Lossless (bigger files, ignores quality)
-          </label>
-          <label class="check">
-            <input type="checkbox" name="keepIfLarger" />
-            Keep the original when the WebP would be larger
-          </label>
-          <p class="status" id="settings-status" role="status"></p>
-        </form>
+    <main class="wrap">
+      <section class="group" aria-labelledby="sites-heading">
+        <div class="group-head">
+          <h2 id="sites-heading">Sites</h2>
+          <p>webpify only works on the sites listed here. Your browser asks for access once per site.</p>
+        </div>
+        <div class="group-body">
+          <ul class="rows" id="sites"></ul>
+          <p class="empty" id="no-sites">No sites yet. Add one below, for example the Lauris CMS.</p>
+
+          <form id="add-site" class="add-site">
+            <div class="presets">
+              <span class="label">Lauris CMS</span>
+              <button type="button" class="btn btn--small" data-pattern="https://admin.lauris.io/*">admin.lauris.io</button>
+              <button type="button" class="btn btn--small" data-pattern="https://admin-stage.lauris.io/*">admin-stage.lauris.io</button>
+            </div>
+            <div class="presets">
+              <span class="label">Demo page</span>
+              <button type="button" class="btn btn--small" data-pattern="http://localhost/*">localhost</button>
+              <button type="button" class="btn btn--small" data-pattern="http://127.0.0.1/*">127.0.0.1</button>
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label for="site-pattern">Page address</label>
+                <input id="site-pattern" name="pattern" type="text" required placeholder="https://admin.lauris.io/*" spellcheck="false" autocomplete="off" />
+                <p class="help">End it with /* to cover the whole site.</p>
+              </div>
+              <div class="field">
+                <label for="site-selector">Upload fields (optional)</label>
+                <input id="site-selector" name="selector" type="text" placeholder='input[type="file"], .dropzone' spellcheck="false" autocomplete="off" />
+                <p class="help">Leave empty for every upload field and Dropzone area.</p>
+              </div>
+            </div>
+            <div class="actions">
+              <button type="submit" class="btn btn--primary">Add site</button>
+              <p class="status" id="sites-status" role="status"></p>
+            </div>
+          </form>
+        </div>
       </section>
 
-      <section aria-labelledby="sites-heading">
-        <h2 id="sites-heading">Sites</h2>
-        <table>
-          <thead>
-            <tr>
-              <th scope="col">Page pattern</th>
-              <th scope="col">Input / drop zone selector</th>
-              <th scope="col">Access</th>
-              <th scope="col"><span class="visually-hidden">Actions</span></th>
-            </tr>
-          </thead>
-          <tbody id="sites"></tbody>
-        </table>
-        <p id="no-sites" class="muted">No sites yet.</p>
-
-        <form id="add-site">
-          <label>
-            <span>Page pattern</span>
-            <input name="pattern" required placeholder="https://example.com/*" spellcheck="false" />
+      <section class="group" aria-labelledby="conversion-heading">
+        <div class="group-head">
+          <h2 id="conversion-heading">Conversion</h2>
+          <p>Applies to every site. Changes save as you make them.</p>
+        </div>
+        <form id="settings" class="group-body">
+          <div class="field">
+            <label for="quality">Quality</label>
+            <div class="range-row">
+              <input id="quality" name="quality" type="range" min="1" max="100" />
+              <output id="quality-value" for="quality"></output>
+            </div>
+            <p class="help">Higher keeps more detail and makes bigger files. 80 suits most photos.</p>
+          </div>
+          <div class="field">
+            <label for="max-dimension">Maximum width and height (px)</label>
+            <input id="max-dimension" name="maxDimension" type="number" min="0" step="1" inputmode="numeric" />
+            <p class="help">Bigger images are scaled down to fit. 0 keeps the original size.</p>
+          </div>
+          <label class="switch">
+            <input name="keepIfLarger" type="checkbox" role="switch" />
+            <span class="switch-label">Keep the original when the WebP would be larger</span>
+            <span class="switch-help">The site then receives whichever file is smaller.</span>
           </label>
-          <label>
-            <span>Input / drop zone selector</span>
-            <input name="selector" placeholder='input[type="file"], .dropzone' spellcheck="false" />
+          <label class="switch">
+            <input name="lossless" type="checkbox" role="switch" />
+            <span class="switch-label">Lossless</span>
+            <span class="switch-help">Keeps every pixel exactly. Files are bigger and the quality setting is ignored.</span>
           </label>
-          <button type="submit">Add site</button>
         </form>
-        <p class="muted">
-          The selector picks the file inputs to watch, and the drop areas: files dropped on or inside a
-          matching element are converted too. Leave it empty to cover every file input and
-          Dropzone.js areas (<code>.dropzone</code>).
-        </p>
-        <p class="presets">
-          Lauris CMS:
-          <button type="button" class="link" data-pattern="https://admin.lauris.io/*">admin.lauris.io</button>
-          <button type="button" class="link" data-pattern="https://admin-stage.lauris.io/*">admin-stage.lauris.io</button>
-        </p>
-        <p class="presets">
-          Demo page:
-          <button type="button" class="link" data-pattern="http://localhost/*">localhost</button>
-          <button type="button" class="link" data-pattern="http://127.0.0.1/*">127.0.0.1</button>
-        </p>
-        <p class="status" id="sites-status" role="status"></p>
-        <p class="muted">Reload tabs that are already open on a site after adding it.</p>
       </section>
     </main>
+
+    <div class="saved" role="status">Saved</div>
+
     <script src="shared.js"></script>
     <script src="options.js"></script>
   </body>

@@ -1,159 +1,66 @@
-:root {
-  color-scheme: light dark;
-  --bg: #f7f7fa;
-  --fg: #1d1c2c;
-  --muted: #5e5c70;
-  --border: #d8d7e0;
-  --accent: #5b4bd6;
-  --error: #b3261e;
-  --ok: #1e7b45;
-}
+/*
+ * webpify additions to the bid page styles (styles/page.css). Only pieces page.css doesn't
+ * have; every value comes from styles/tokens.css.
+ */
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #1d1c2c;
-    --fg: #ecebf3;
-    --muted: #a7a5b8;
-    --border: #3a3850;
-    --accent: #a99cff;
-    --error: #ff8a80;
-    --ok: #7ad69c;
-  }
-}
-
-body {
-  margin: 0;
-  background: var(--bg);
-  color: var(--fg);
-  font: 15px/1.5 system-ui, sans-serif;
-}
-
-main {
-  max-width: 760px;
-  margin: 0 auto;
-  padding: 32px 16px 64px;
-}
-
-h1 {
-  margin: 0 0 4px;
-}
-
-h2 {
-  margin: 32px 0 12px;
-  font-size: 1.1rem;
-}
-
-.lead,
-.muted,
-small {
-  color: var(--muted);
-}
-
-.row {
+/* The add-site form: presets, the two fields, then the action. */
+.add-site {
   display: grid;
-  grid-template-columns: 200px 1fr auto;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 12px;
+  gap: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
 }
 
-.check {
+/* Side-by-side fields keep their inputs level when one help text runs to two lines. */
+.field-row > .field {
+  align-content: start;
+}
+
+/* A label, then one-click presets that fill in the page address. */
+.presets {
   display: flex;
-  gap: 8px;
+  flex-wrap: wrap;
   align-items: center;
-  margin-bottom: 8px;
+  gap: 8px;
 }
 
-input[type="number"] {
-  width: 120px;
+.presets .label {
+  min-width: 96px;
 }
 
-input:not([type="checkbox"], [type="range"]),
-button {
-  font: inherit;
-  padding: 6px 10px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: transparent;
-  color: inherit;
+/* An empty site list has no rows to separate it from the form. */
+.rows:empty {
+  display: none;
 }
 
-button {
+.row-title {
+  font-size: 15px;
+}
+
+/* Quality: the slider takes the room, its value sits at the end. */
+.range-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  max-width: 420px;
+}
+
+/* Native slider in bid's colour; the switch track uses the same --orange-dark when on. */
+.range-row input[type='range'] {
+  flex: 1;
+  height: 24px;
+  border-radius: var(--radius-pill);
+  accent-color: var(--orange-dark);
   cursor: pointer;
 }
 
-button[type="submit"] {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: var(--bg);
+.range-row output {
+  min-width: 3ch;
+  font-weight: 700;
+  text-align: right;
 }
 
-button.link {
-  border: none;
-  padding: 0 4px;
-  color: var(--accent);
-  text-decoration: underline;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-th,
-td {
-  text-align: left;
-  padding: 8px 6px;
-  border-bottom: 1px solid var(--border);
-  vertical-align: middle;
-}
-
-td code {
-  word-break: break-all;
-}
-
-#add-site {
-  display: grid;
-  grid-template-columns: 1fr 1fr auto;
-  gap: 12px;
-  align-items: end;
-  margin-top: 16px;
-}
-
-#add-site label span {
-  display: block;
-  font-size: 0.85rem;
-  color: var(--muted);
-}
-
-#add-site input {
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.status {
-  min-height: 1.5em;
-}
-
-.status.error {
-  color: var(--error);
-}
-
-.status.ok {
-  color: var(--ok);
-}
-
-.visually-hidden {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-}
-
-@media (max-width: 600px) {
-  .row,
-  #add-site {
-    grid-template-columns: 1fr;
-  }
+/* A number of pixels doesn't need the full row. */
+input[type='number'] {
+  max-width: 200px;
 }

@@ -119,13 +119,13 @@ webpify only works on sites you add. For our Lauris CMS, add both the live and t
 
 1. Click the **webpify** icon. The settings page opens.
 2. Under **Sites**, next to **Lauris CMS**, click **admin.lauris.io**. This fills in `https://admin.lauris.io/*` for you.
-3. Leave **Input / drop zone selector** empty.
+3. Leave **Upload fields (optional)** empty.
 4. Click **Add site**.
 5. Your browser asks for permission to access that site. Click **Allow**.
 6. Repeat steps 2–5 with **admin-stage.lauris.io** (`https://admin-stage.lauris.io/*`).
 7. Reload any tabs where the CMS is already open.
 
-For any other site, type its address in **Page pattern** with `/*` at the end (for example `https://www.example.com/*`) instead of clicking a preset.
+For any other site, type its address in **Page address** with `/*` at the end (for example `https://www.example.com/*`) instead of clicking a preset.
 
 That's it. Upload images as you normally would. A small dark notice in the bottom-right corner of the page shows that webpify is converting them and how much smaller they got.
 
@@ -153,7 +153,7 @@ When there's a new version, download the new file from the [latest release](../.
 ## Something isn't working
 
 - **Images are uploaded unchanged.**
-  - Open the webpify settings and check that the site is listed and shows **Granted**. If it shows **Grant**, click it and allow access.
+  - Open the webpify settings and check that the site is listed with **Access granted**. If it says **No access**, click **Grant access** and allow it.
   - Reload the page and try again.
   - Some upload fields only accept JPEG or PNG; webpify leaves those alone on purpose.
 - **"Manifest file is missing or unreadable"** when loading in Chrome, Edge or Brave: you picked the wrong folder. Pick the folder that directly contains a file called `manifest.json`. After unzipping, that is sometimes one folder deeper.
