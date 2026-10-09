@@ -1,6 +1,6 @@
 # Chrome Web Store listing: webpify
 
-> Last updated: 2026-10-08
+> Last updated: 2026-10-09
 >
 > Everything the Chrome Developer Dashboard asks for, ready to paste.
 
@@ -20,7 +20,7 @@ webpify makes the images you upload smaller by converting them to WebP the momen
 
 Choose the sites where it should work. On those sites, images you select with an upload button or drag onto an upload area are converted automatically, and the site uploads the smaller WebP files instead of the originals. It works with standard file upload fields and with common drag-and-drop upload areas.
 
-Settings let you pick the quality, a maximum width and height for large photos, and lossless conversion. If a WebP would come out larger than the original, the original is kept. Photos keep their colour profile, so colours stay true, and location and camera details are removed. A small notice in the corner of the page shows how many images were converted and how much space was saved.
+Settings let you pick the quality, a maximum width and height for large photos, and lossless conversion. If a WebP would come out larger than the original, the original is kept. Photos keep their colour profile, so colours stay true, and location and camera details are removed. A small notice at the bottom of the page shows how many images were converted and how much space was saved.
 
 How to use it:
 1. Open the extension's settings and add a site, for example https://cms.example.com/*.
@@ -51,7 +51,7 @@ English
 | Small promo tile | 440×280 | ⬜ Optional | |
 
 Screenshot notes (take them in Chrome with the window sized to 1280×800):
-1. An upload page, e.g. the bidcms image form or `demo/` section 5, right after dropping photos: the WebP files listed and the webpify notice in the corner showing the savings.
+1. An upload page, e.g. the bidcms image form or `demo/` section 5, right after dropping photos: the WebP files listed and the webpify notice at the bottom showing the savings.
 2. The options page with one site added and the conversion settings visible.
 
 ## Permissions justification
@@ -93,7 +93,8 @@ Data use certification:
 
 | Version | Date | Changes | Status |
 |---|---|---|---|
-| 0.1.0 | 2026-10-08 | First release: WebP conversion for file inputs and Dropzone.js drop areas, per-site settings, colour profiles kept. | Draft |
+| 0.2.0 | 2026-10-09 | Settings page and on-page notice in the bid look, Lauris CMS presets. | Internal (GitHub Releases) |
+| 0.1.0 | 2026-10-09 | First release: WebP conversion for file inputs and Dropzone.js drop areas, per-site settings, colour profiles kept. | Internal (GitHub Releases) |
 
 ## Review notes
 

@@ -16,7 +16,7 @@ Publishing to the Chrome Web Store and Mozilla's add-ons site comes later; the s
 
 ## Making a release
 
-1. **Bump the version.** Use the same number in `extension/manifest.json` and `Cargo.toml`, e.g. `0.2.0`, then run `./build.sh` once so `Cargo.lock` picks up the new version. The workflow builds with `--locked` and fails if the lock file is stale.
+1. **Bump the version.** Use the same number in `extension/manifest.json` and `Cargo.toml`, e.g. `0.2.0`, then run `cargo test` once so `Cargo.lock` picks up the new version (`build.sh` and the workflow use `--locked`, which refuses a stale lock file).
 2. **Commit, tag and push:**
    ```bash
    git commit -am "Release 0.2.0"
