@@ -1,0 +1,159 @@
+:root {
+  color-scheme: light dark;
+  --bg: #f7f7fa;
+  --fg: #1d1c2c;
+  --muted: #5e5c70;
+  --border: #d8d7e0;
+  --accent: #5b4bd6;
+  --error: #b3261e;
+  --ok: #1e7b45;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1d1c2c;
+    --fg: #ecebf3;
+    --muted: #a7a5b8;
+    --border: #3a3850;
+    --accent: #a99cff;
+    --error: #ff8a80;
+    --ok: #7ad69c;
+  }
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: 15px/1.5 system-ui, sans-serif;
+}
+
+main {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 32px 16px 64px;
+}
+
+h1 {
+  margin: 0 0 4px;
+}
+
+h2 {
+  margin: 32px 0 12px;
+  font-size: 1.1rem;
+}
+
+.lead,
+.muted,
+small {
+  color: var(--muted);
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 200px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.check {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+input[type="number"] {
+  width: 120px;
+}
+
+input:not([type="checkbox"], [type="range"]),
+button {
+  font: inherit;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button[type="submit"] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--bg);
+}
+
+button.link {
+  border: none;
+  padding: 0 4px;
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  text-align: left;
+  padding: 8px 6px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+td code {
+  word-break: break-all;
+}
+
+#add-site {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 12px;
+  align-items: end;
+  margin-top: 16px;
+}
+
+#add-site label span {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+#add-site input {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.status {
+  min-height: 1.5em;
+}
+
+.status.error {
+  color: var(--error);
+}
+
+.status.ok {
+  color: var(--ok);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+@media (max-width: 600px) {
+  .row,
+  #add-site {
+    grid-template-columns: 1fr;
+  }
+}

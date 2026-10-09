@@ -1,0 +1,8 @@
+<!-- webpify mark: a photo frame whose right edge rises into an upload arrow.
+     bid Pointer style: 20px grid, 1.6 stroke, round caps and joins, currentColor. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M10.25 4.75H5.25a2.5 2.5 0 0 0-2.5 2.5v7.5a2.5 2.5 0 0 0 2.5 2.5h7.5a2.5 2.5 0 0 0 2.5-2.5V2.25" />
+  <path d="M12.5 5l2.75-2.75L18 5" />
+  <path d="M5.5 14.25l3.25-3.5 3.25 3.5" />
+  <circle cx="11.75" cy="8.25" r="1.25" fill="currentColor" stroke="none" />
+</svg>

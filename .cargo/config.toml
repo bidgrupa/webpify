@@ -1,0 +1,4 @@
+# zenwebp only uses its WASM SIMD path when simd128 is enabled at compile time
+# (WebAssembly has no runtime CPU feature detection). A RUSTFLAGS env var overrides this.
+[target.wasm32-unknown-unknown]
+rustflags = ["-C", "target-feature=+simd128"]

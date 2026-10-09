@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>webpify demo uploads</title>
+    <link rel="stylesheet" href="vendor/dropzone.min.css" />
+    <link rel="stylesheet" href="demo.css" />
+  </head>
+  <body>
+    <main>
+      <h1>webpify demo uploads</h1>
+      <p class="lead">
+        Each section shows the files the page received from its file input, as its own upload code
+        would see them. With webpify enabled for this site, images in sections 1–3 and 5 arrive as
+        <code>.webp</code>. Section 4 only accepts JPEG and PNG, so webpify leaves it alone.
+      </p>
+
+      <section class="card">
+        <h2>1. Plain input</h2>
+        <p class="muted">
+          <code>&lt;input type="file" accept="image/*" multiple&gt;</code> with an
+          <code>addEventListener("change")</code> handler.
+        </p>
+        <input id="plain-input" type="file" accept="image/*" multiple />
+        <div id="plain-output" class="output"></div>
+      </section>
+
+      <section class="card">
+        <h2>2. React 18 <code>onChange</code></h2>
+        <p class="muted">A React component that keeps the picked files in state.</p>
+        <div id="react-root"></div>
+      </section>
+
+      <section class="card">
+        <h2>3. Inside a shadow root</h2>
+        <p class="muted">A web component whose file input lives in an open shadow root.</p>
+        <shadow-uploader></shadow-uploader>
+      </section>
+
+      <section class="card">
+        <h2>4. JPEG/PNG only</h2>
+        <p class="muted">
+          <code>accept="image/jpeg,image/png"</code>. A WebP would be rejected here, so the original
+          files should arrive.
+        </p>
+        <input id="strict-input" type="file" accept="image/jpeg,image/png" multiple />
+        <div id="strict-output" class="output"></div>
+      </section>
+
+      <section class="card">
+        <h2>5. Dropzone.js</h2>
+        <p class="muted">
+          Dropzone 5 on a <code>&lt;form class="dropzone"&gt;</code>. Clicking goes through a hidden
+          file input that Dropzone adds to <code>&lt;body&gt;</code>; dragging files onto the area
+          goes through a <code>drop</code> event. Uploading is switched off, the list shows what
+          Dropzone queued.
+        </p>
+        <form action="/upload" id="dropzone-demo" class="dropzone"></form>
+        <div id="dropzone-output" class="output"></div>
+      </section>
+    </main>
+
+    <script src="vendor/react.production.min.js"></script>
+    <script src="vendor/react-dom.production.min.js"></script>
+    <script src="vendor/dropzone.min.js"></script>
+    <script src="demo.js"></script>
+  </body>
+</html>

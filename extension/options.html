@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>webpify settings</title>
+    <link rel="stylesheet" href="options.css" />
+  </head>
+  <body>
+    <main>
+      <h1>webpify</h1>
+      <p class="lead">
+        Images you pick in a matching file input are converted to WebP before the page sees them.
+        JPEG, PNG and BMP are converted; other files pass through unchanged.
+      </p>
+
+      <section aria-labelledby="conversion-heading">
+        <h2 id="conversion-heading">Conversion</h2>
+        <form id="settings">
+          <label class="row">
+            <span>Quality</span>
+            <input type="range" name="quality" min="1" max="100" />
+            <output id="quality-value"></output>
+          </label>
+          <label class="row">
+            <span>Max width/height (px)</span>
+            <input type="number" name="maxDimension" min="0" step="1" inputmode="numeric" />
+            <small>0 keeps the original size</small>
+          </label>
+          <label class="check">
+            <input type="checkbox" name="lossless" />
+            Lossless (bigger files, ignores quality)
+          </label>
+          <label class="check">
+            <input type="checkbox" name="keepIfLarger" />
+            Keep the original when the WebP would be larger
+          </label>
+          <p class="status" id="settings-status" role="status"></p>
+        </form>
+      </section>
+
+      <section aria-labelledby="sites-heading">
+        <h2 id="sites-heading">Sites</h2>
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Page pattern</th>
+              <th scope="col">Input / drop zone selector</th>
+              <th scope="col">Access</th>
+              <th scope="col"><span class="visually-hidden">Actions</span></th>
+            </tr>
+          </thead>
+          <tbody id="sites"></tbody>
+        </table>
+        <p id="no-sites" class="muted">No sites yet.</p>
+
+        <form id="add-site">
+          <label>
+            <span>Page pattern</span>
+            <input name="pattern" required placeholder="https://example.com/*" spellcheck="false" />
+          </label>
+          <label>
+            <span>Input / drop zone selector</span>
+            <input name="selector" placeholder='input[type="file"], .dropzone' spellcheck="false" />
+          </label>
+          <button type="submit">Add site</button>
+        </form>
+        <p class="muted">
+          The selector picks the file inputs to watch, and the drop areas: files dropped on or inside a
+          matching element are converted too. Leave it empty to cover every file input and
+          Dropzone.js areas (<code>.dropzone</code>).
+        </p>
+        <p class="presets">
+          Demo page presets:
+          <button type="button" class="link" data-pattern="http://localhost/*">localhost</button>
+          <button type="button" class="link" data-pattern="http://127.0.0.1/*">127.0.0.1</button>
+        </p>
+        <p class="status" id="sites-status" role="status"></p>
+        <p class="muted">Reload tabs that are already open on a site after adding it.</p>
+      </section>
+    </main>
+    <script src="shared.js"></script>
+    <script src="options.js"></script>
+  </body>
+</html>

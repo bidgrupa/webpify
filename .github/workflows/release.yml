@@ -1,0 +1,212 @@
+name: Release
+
+# Builds the Chrome and Firefox packages and publishes them as a GitHub release.
+#   - Push a tag like v0.1.0 (it must match extension/manifest.json) to publish a release.
+#   - "Run workflow" on the Actions tab builds the same packages as downloadable artifacts
+#     without publishing anything, which is handy for testing.
+# Mozilla signing is optional: with the AMO_JWT_ISSUER and AMO_JWT_SECRET repository secrets
+# set, tagged releases also get a signed .xpi that regular Firefox installs. See RELEASING.md.
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  WASM_BINDGEN_VERSION: "0.2.129" # must match the wasm-bindgen version in Cargo.toml
+
+jobs:
+  build:
+    name: Build and test the converter
+    runs-on: ubuntu-24.04
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Check the version
+        id: version
+        run: |
+          version=$(jq -r .version extension/manifest.json)
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          if [[ "$GITHUB_REF_TYPE" == "tag" && "$GITHUB_REF_NAME" != "v$version" ]]; then
+            echo "::error::Tag $GITHUB_REF_NAME doesn't match version $version in extension/manifest.json"
+            exit 1
+          fi
+
+      - name: Install the pinned Rust toolchain
+        run: |
+          channel=$(sed -n 's/^channel = "\(.*\)"/\1/p' rust-toolchain.toml)
+          rustup toolchain install "$channel" --profile minimal --target wasm32-unknown-unknown
+
+      - name: Restore the Rust cache
+        uses: actions/cache@v6
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            ~/.cargo/bin/wasm-bindgen
+            target
+          key: rust-${{ runner.os }}-${{ hashFiles('rust-toolchain.toml', 'Cargo.lock') }}-wasm-bindgen-${{ env.WASM_BINDGEN_VERSION }}
+
+      - name: Install wasm-bindgen
+        run: |
+          if ! wasm-bindgen --version 2>/dev/null | grep -qF "$WASM_BINDGEN_VERSION"; then
+            cargo install wasm-bindgen-cli --version "$WASM_BINDGEN_VERSION" --locked
+          fi
+
+      - name: Test
+        run: cargo test --locked
+
+      - name: Build the WebAssembly module
+        run: ./build.sh
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - name: Package the source code
+        run: node scripts/package.mjs source
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: wasm
+          path: extension/pkg/
+          if-no-files-found: error
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: source
+          path: dist/webpify-source-*.zip
+          if-no-files-found: error
+
+  chrome:
+    name: Package for Chrome, Edge and Brave
+    needs: build
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: wasm
+          path: extension/pkg
+
+      - name: Package
+        run: node scripts/package.mjs chrome
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: chrome
+          path: dist/webpify-chrome-*.zip
+          if-no-files-found: error
+
+  firefox:
+    name: Package for Firefox and Zen
+    needs: build
+    runs-on: ubuntu-24.04
+    env:
+      VERSION: ${{ needs.build.outputs.version }}
+      AMO_JWT_ISSUER: ${{ secrets.AMO_JWT_ISSUER }}
+      AMO_JWT_SECRET: ${{ secrets.AMO_JWT_SECRET }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: wasm
+          path: extension/pkg
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: source
+          path: dist
+
+      - name: Package
+        run: node scripts/package.mjs firefox
+
+      # Mozilla accepts each version number only once, so only tagged releases are signed.
+      - name: Sign with Mozilla (unlisted)
+        if: env.AMO_JWT_ISSUER != '' && env.AMO_JWT_SECRET != '' && github.ref_type == 'tag'
+        run: |
+          npx --yes web-ext@8 sign \
+            --channel=unlisted \
+            --source-dir dist/firefox \
+            --upload-source-code "dist/webpify-source-$VERSION.zip" \
+            --artifacts-dir web-ext-artifacts \
+            --api-key "$AMO_JWT_ISSUER" \
+            --api-secret "$AMO_JWT_SECRET"
+          mv web-ext-artifacts/*.xpi "dist/webpify-firefox-$VERSION.xpi"
+          node scripts/package.mjs updates
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: firefox
+          path: |
+            dist/webpify-firefox-*.xpi
+            dist/updates.json
+          if-no-files-found: error
+
+  release:
+    name: Publish the GitHub release
+    if: github.ref_type == 'tag'
+    needs: [build, chrome, firefox]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: chrome
+          path: dist
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: firefox
+          path: dist
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: source
+          path: dist
+
+      - name: Create or update the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.build.outputs.version }}
+        run: |
+          guide="https://github.com/$GITHUB_REPOSITORY/blob/$GITHUB_REF_NAME/INSTALL.md"
+          if [[ -f "dist/webpify-firefox-$VERSION.xpi" ]]; then
+            firefox="- **Firefox or Zen:** \`webpify-firefox-$VERSION.xpi\` (signed by Mozilla, updates itself)"
+          else
+            firefox="- **Zen:** \`webpify-firefox-$VERSION-unsigned.xpi\`
+          - **Firefox:** \`webpify-firefox-$VERSION-unsigned.xpi\`, loaded as a temporary add-on (it is removed when Firefox restarts)"
+          fi
+          cat > notes.md <<EOF
+          Internal build of webpify $VERSION. **Installation guide: [INSTALL.md]($guide)**
+
+          Which file to download:
+          - **Chrome, Edge or Brave:** \`webpify-chrome-$VERSION.zip\`
+          $firefox
+
+          \`webpify-source-$VERSION.zip\` is the source code (AGPL-3.0).
+          EOF
+          sed -i 's/^          //' notes.md
+
+          if gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" dist/* --clobber --repo "$GITHUB_REPOSITORY"
+          else
+            gh release create "$GITHUB_REF_NAME" dist/* --repo "$GITHUB_REPOSITORY" --verify-tag \
+              --title "webpify $VERSION" --notes-file notes.md
+          fi

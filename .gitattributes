@@ -1,0 +1,7 @@
+# Always LF in the repository and in checkouts, whatever core.autocrlf says: the shell
+# scripts break with CRLF, and the source archive must match what CI builds from.
+* text=auto eol=lf
+*.png binary
+*.wasm binary
+*.zip binary
+*.xpi binary

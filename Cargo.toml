@@ -1,0 +1,38 @@
+[package]
+name = "webpify"
+version = "0.1.0"
+description = "Image to WebP converter (Rust/WASM) for the webpify browser extension"
+# zenwebp is AGPL-3.0-only, so the extension is too.
+license = "AGPL-3.0-only"
+edition = "2024"
+# zenwebp 0.4 needs 1.93; with edition 2024 cargo also picks dependency versions that respect this.
+rust-version = "1.93"
+publish = false
+
+[lib]
+# cdylib: the .wasm for the extension. rlib: native `cargo test`.
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+image = { version = "0.25", default-features = false, features = ["jpeg", "png", "bmp"] }
+# Pure-Rust WebP encoder (AGPL-3.0-only OR commercial). 0.4.5 is yanked.
+zenwebp = { version = "=0.4.4", default-features = false }
+thiserror = "2"
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+# Must match the wasm-bindgen CLI version exactly.
+wasm-bindgen = "=0.2.129"
+console_error_panic_hook = "0.1"
+
+[dev-dependencies]
+# The webp decoder lets tests read back what we encoded.
+image = { version = "0.25", default-features = false, features = ["jpeg", "png", "bmp", "webp"] }
+
+# Codecs are unusable in unoptimized builds; optimize dependencies even in dev.
+[profile.dev.package."*"]
+opt-level = 2
+
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = 3
