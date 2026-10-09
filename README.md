@@ -95,7 +95,7 @@ python3 -m http.server 8000 --directory demo
    - Section 4 (JPEG/PNG only) should keep the originals.
    - In section 5 (Dropzone.js), try both clicking and dragging files from your file manager.
 
-   A toast in the corner shows progress and savings.
+   A notice at the bottom of the page shows progress and savings.
 
 Debugging: the background console is under *Inspect views: service worker* in Chrome, or *Inspect* in Firefox's about:debugging. The content script logs to the page console with a `[webpify]` prefix.
 

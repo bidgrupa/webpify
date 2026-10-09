@@ -29,12 +29,32 @@ async function convert(file, options) {
   return convertToWebp(input, options.quality, options.maxDimension, options.lossless);
 }
 
+// --- Styles for the on-page notice -------------------------------------------
+
+// The content script draws its notice in a shadow root and needs these as one text with the
+// @imports resolved. Reading them here, rather than fetching them from the page, means no
+// extension file has to be web-accessible (visible to websites).
+const UI_CSS_FILES = ["styles/tokens.css", "styles/base.css", "styles/controls.css", "styles/overlay.css", "toast.css"];
+let uiCss = null;
+function loadUiCss() {
+  uiCss ??= Promise.all(UI_CSS_FILES.map((file) => fetch(api.runtime.getURL(file)).then((r) => r.text())))
+    .then((texts) => texts.map((text) => text.replace(/@import[^;]+;/g, "")).join("\n"))
+    .catch((error) => {
+      uiCss = null;
+      throw error;
+    });
+  return uiCss;
+}
+
 api.runtime.onMessage.addListener((message, _sender, sendResponse) => {
-  if (message?.type !== "convert") return false;
-  convert(message.file, message.options).then(
-    (bytes) => sendResponse({ ok: true, bytes }),
-    (error) => sendResponse({ ok: false, error: String(error?.message ?? error) }),
-  );
+  const work =
+    message?.type === "convert"
+      ? convert(message.file, message.options).then((bytes) => ({ ok: true, bytes }))
+      : message?.type === "ui-css"
+        ? loadUiCss().then((css) => ({ ok: true, css }))
+        : null;
+  if (!work) return false;
+  work.then(sendResponse, (error) => sendResponse({ ok: false, error: String(error?.message ?? error) }));
   return true; // keep the channel open for the async response
 });
 

@@ -1,0 +1,887 @@
+/*
+ * On-page UI in the bid Pointer look, for a content script's shadow root.
+ * Taken from Pointer's src/content/ui.css with generic class names:
+ *   Pointer's note → .panel, note-env → .chip, note-select → .pill-select.
+ * Load it into the shadow root as text (see references/on-page-ui.md), never into the page.
+ * Needs tokens.css, base.css and controls.css; fonts come from the FontFace API.
+ */
+@import 'tokens.css';
+@import 'base.css';
+@import 'controls.css';
+
+/* The shadow host inherits nothing from the site. */
+:host {
+  all: initial;
+}
+
+/* Above the site's own overlays, cookie bars and chat widgets. */
+.dock,
+.pin,
+.panel,
+.toast {
+  z-index: 2147483647;
+}
+
+.outline {
+  z-index: 2147483646;
+}
+
+/* ---------- Dock and launcher: a pill, bottom right ---------- */
+
+.dock {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.launcher {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  height: 44px;
+  padding: 0 18px 0 14px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--ink);
+  color: var(--paper);
+  box-shadow: var(--lift);
+  font-family: var(--font);
+  cursor: pointer;
+  user-select: none;
+  transition: transform 160ms var(--ease);
+}
+
+.launcher:hover {
+  transform: translateY(-1px);
+}
+
+.launcher:focus-visible {
+  outline: none;
+  box-shadow: var(--lift), var(--ring);
+}
+
+.launcher-icon {
+  position: relative;
+  width: 20px;
+  height: 20px;
+  color: var(--orange);
+}
+
+.launcher-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* A red dot when something needs setting up; the launcher's title says what. */
+.launcher-badge {
+  position: absolute;
+  top: -2px;
+  right: -3px;
+  display: none;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--danger-light);
+  box-shadow: 0 0 0 2px var(--paper);
+}
+
+.launcher.needs-setup .launcher-badge {
+  display: block;
+}
+
+/* <span class="launcher-label caps">Name</span> carries the label in bid's button voice. */
+
+/* "Esc" keycap, shown only while active. */
+.launcher-kbd {
+  display: none;
+  border-color: rgba(29, 28, 44, 0.35);
+  background: transparent;
+}
+
+/* Active (a mode is on): gold, ink text and icon. */
+.launcher.is-active {
+  background: var(--gold);
+  color: var(--ink);
+}
+
+.launcher.is-active .launcher-icon {
+  color: var(--ink);
+}
+
+.launcher.is-active .launcher-kbd {
+  display: inline-flex;
+}
+
+/* A second mode that must be obvious at a glance: an orange ring. */
+.launcher.is-mode:not(.is-active) {
+  box-shadow:
+    var(--lift),
+    0 0 0 3px var(--orange);
+}
+
+/* A secondary dock action next to the launcher: paper with an ink ring, so it never looks like the launcher. */
+.dock-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  height: 44px;
+  padding: 0 18px 0 8px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow:
+    var(--lift),
+    inset 0 0 0 2px var(--ink);
+  font-family: var(--font);
+  cursor: pointer;
+  user-select: none;
+  transition: transform 160ms var(--ease);
+}
+
+.dock-action:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.dock-action:focus-visible {
+  outline: none;
+  box-shadow:
+    var(--lift),
+    inset 0 0 0 2px var(--ink),
+    var(--ring);
+}
+
+/* A count in an orange bubble, e.g. how many items will go out. */
+.dock-count {
+  display: inline-grid;
+  place-items: center;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 8px;
+  border-radius: var(--radius-pill);
+  background: var(--orange);
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.dock-action:disabled {
+  color: var(--ink-2);
+  box-shadow:
+    var(--lift),
+    inset 0 0 0 1px var(--line);
+  cursor: default;
+}
+
+.dock-action:disabled .dock-count {
+  background: var(--line);
+  color: var(--ink-2);
+}
+
+/* ---------- Outlines while pointing at the page ---------- */
+
+.outline {
+  position: fixed;
+  display: none;
+  pointer-events: none;
+}
+
+.outline.is-visible {
+  display: block;
+}
+
+/* The area (a block, a section): orange, lightly filled. */
+.outline--block {
+  border-radius: 2px;
+  outline: 3px solid var(--orange);
+  background: rgba(255, 161, 115, 0.08);
+}
+
+/* The exact element: dashed ink with a light halo, so it reads on dark sites too. */
+.outline--element {
+  border-radius: 3px;
+  outline: 2px dashed var(--ink);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 2px rgba(253, 252, 252, 0.85);
+}
+
+/* A name tab attached to the area's outline. */
+.outline-tab {
+  position: absolute;
+  bottom: 100%;
+  left: -3px;
+  max-width: min(60vw, 560px);
+  padding: 7px 10px 6px;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  background: var(--orange);
+  color: var(--ink);
+  font: 600 13px/1 var(--font);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.outline-tab:empty {
+  display: none;
+}
+
+/* Near the top of the window the tab tucks inside the outline. */
+.outline-tab.is-inside {
+  top: 0;
+  bottom: auto;
+  left: 0;
+  border-radius: 0 0 var(--radius-sm) 0;
+}
+
+/* ---------- The comment pin: its one square corner sits on the spot ---------- */
+
+.pin,
+.panel-pin {
+  position: relative;
+  border: 2px solid var(--ink);
+  border-radius: 50% 50% 50% 0;
+  background: var(--orange);
+}
+
+.pin::after,
+.panel-pin::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  background: var(--paper);
+}
+
+/* Place with left/top = the spot; the body points up and right. */
+.pin {
+  position: fixed;
+  display: none;
+  width: 24px;
+  height: 24px;
+  margin-top: -24px;
+  box-shadow:
+    0 0 0 2px var(--paper),
+    0 6px 14px rgba(29, 28, 44, 0.35);
+  transform-origin: 0 100%;
+  pointer-events: none;
+}
+
+.pin::after {
+  inset: 6px;
+}
+
+/* Near the right or top edge the pin turns toward open space; the tip stays on the spot. */
+.pin.flip-x {
+  margin-left: -24px;
+  border-radius: 50% 50% 0 50%;
+  transform-origin: 100% 100%;
+}
+
+.pin.flip-y {
+  margin-top: 0;
+  border-radius: 0 50% 50% 50%;
+  transform-origin: 0 0;
+}
+
+.pin.flip-x.flip-y {
+  border-radius: 50% 0 50% 50%;
+  transform-origin: 100% 0;
+}
+
+.pin.is-visible {
+  display: block;
+  animation: pin-drop 220ms var(--ease);
+}
+
+@keyframes pin-drop {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.6);
+  }
+}
+
+/* ---------- Floating panel (Pointer's note card) ---------- */
+
+/* 100% (not vw) of a fixed element is the viewport without its scrollbar, so the 8px margin holds. */
+.panel {
+  position: fixed;
+  display: none;
+  flex-direction: column;
+  width: 400px;
+  max-width: calc(100% - 16px);
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow:
+    0 0 0 1px rgba(29, 28, 44, 0.08),
+    var(--lift);
+  font: 400 15px/1.45 var(--font);
+}
+
+.panel.is-open {
+  display: flex;
+  animation: panel-in 180ms var(--ease);
+}
+
+@keyframes panel-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+
+/* A panel that opens from the dock rather than from a spot on the page: above the dock,
+   right-aligned with it, growing out of the launcher. */
+.panel--docked {
+  right: 20px;
+  bottom: 76px;
+  transform-origin: calc(100% - 40px) calc(100% + 30px);
+}
+
+.panel-head {
+  display: grid;
+  gap: 12px;
+  padding: 16px 18px 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.panel-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+/* The title wraps rather than truncating; insert <wbr> between words of long names. */
+.panel-title {
+  display: flex;
+  flex: 1;
+  align-items: flex-start;
+  gap: 9px;
+  min-width: 0;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.panel-title.is-none {
+  color: var(--ink-2);
+  font-weight: 500;
+}
+
+/* A small pin before the title ties the panel to the spot. */
+.panel-pin {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  margin-top: 3px;
+}
+
+.panel-pin::after {
+  inset: 3px;
+}
+
+/* A small label in the header, e.g. "Staging". --strong is filled ink, for what must stand out ("Production"). */
+.chip {
+  flex: none;
+  margin-top: 1px;
+  padding: 3px 9px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  color: var(--ink-2);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.chip--strong {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.chip--accent {
+  border-color: var(--orange);
+  background: var(--orange);
+  color: var(--ink);
+  font-weight: 700;
+}
+
+/* The ×, pulled into the card's corner. */
+.panel-close {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  margin: -4px -6px 0 0;
+  padding: 7px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--ink-2);
+  cursor: pointer;
+  transition:
+    background-color 150ms ease,
+    color 150ms ease;
+}
+
+.panel-close:hover {
+  background: var(--line);
+  color: var(--ink);
+}
+
+.panel-close:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
+}
+
+.panel-close svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* Pickers in the header: pills with a leading icon; they wrap when they don't fit. */
+.panel-pickers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pill-select {
+  --icon: var(--icon-list);
+  flex: 1 1 190px;
+  height: 40px;
+  min-width: 0;
+  max-width: 100%;
+  padding: 0 32px 0 36px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  background-color: var(--paper);
+  background-image: var(--icon), var(--icon-chevron);
+  background-repeat: no-repeat;
+  background-position:
+    13px center,
+    right 13px center;
+  background-size:
+    16px 16px,
+    12px 7px;
+  font-size: 14px;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  appearance: none;
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+/* As wide as the chosen option (Chromium; Firefox needs the JS fallback in on-page-ui.md). */
+.pill-select--fit {
+  --icon: var(--icon-person);
+  flex: 0 1 auto;
+  field-sizing: content;
+}
+
+.pill-select:hover:not(:disabled) {
+  border-color: var(--ink-3);
+}
+
+.pill-select:focus-visible {
+  outline: none;
+  border-color: var(--orange-dark);
+  box-shadow: var(--ring);
+}
+
+.pill-select.is-empty {
+  border-color: var(--orange);
+  background-color: var(--orange-wash);
+  color: var(--orange-ink);
+}
+
+.pill-select:disabled {
+  color: var(--ink-3);
+  cursor: default;
+}
+
+.pill-select option,
+.pill-select optgroup {
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.panel-body {
+  padding: 14px 18px 16px;
+}
+
+/* The main text field: borderless, it is the panel. Grows with its text. */
+.panel-input {
+  display: block;
+  width: 100%;
+  min-height: 6em;
+  max-height: 40vh;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  font-size: 16px;
+  line-height: 1.5;
+  resize: none;
+  field-sizing: content;
+}
+
+.panel-input::placeholder {
+  color: var(--ink-3);
+}
+
+/* Keyboard hints on creme. */
+.panel-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  padding: 10px 18px 12px;
+  background: var(--creme);
+  color: var(--ink-2);
+  font-size: 12px;
+  line-height: 1.3;
+}
+
+.hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.hint kbd + kbd {
+  margin-left: -2px;
+}
+
+/* A destructive text action in the foot, e.g. "Remove". */
+.panel-danger {
+  margin-left: auto;
+  padding: 2px 0;
+  border: 0;
+  background: transparent;
+  color: var(--danger);
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.panel-danger:focus-visible {
+  outline: none;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--ring);
+}
+
+/* Labelled fields inside a panel. */
+.field {
+  display: grid;
+  gap: 6px;
+}
+
+.field + .field {
+  margin-top: 14px;
+}
+
+.field-label {
+  color: var(--ink-2);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.field-input {
+  display: block;
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  outline: none;
+  background: var(--paper);
+  font-size: 15px;
+  line-height: 1.45;
+  resize: none;
+  field-sizing: content;
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.field-input:focus {
+  border-color: var(--orange-dark);
+  box-shadow: var(--ring);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+/* ---------- Progress: one segment per step ---------- */
+
+.progress {
+  display: grid;
+  gap: 10px;
+}
+
+.progress-label {
+  font-weight: 600;
+}
+
+.progress-track {
+  display: grid;
+  grid-auto-columns: 1fr;
+  grid-auto-flow: column;
+  gap: 4px;
+}
+
+.progress-seg {
+  position: relative;
+  height: 4px;
+  overflow: hidden;
+  border-radius: 2px;
+  background: var(--line);
+}
+
+.progress-seg.is-done {
+  background: var(--orange-dark);
+}
+
+.progress-seg.is-active::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--gold);
+  transform-origin: left;
+  animation: seg-fill 1.4s var(--ease) infinite;
+}
+
+@keyframes seg-fill {
+  0% {
+    opacity: 1;
+    transform: scaleX(0);
+  }
+  70% {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scaleX(1);
+  }
+}
+
+/* A preview image inside a panel, e.g. the screenshot about to be sent. */
+.panel-thumb {
+  display: block;
+  width: 100%;
+  max-height: 180px;
+  margin-top: 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--creme);
+  object-fit: contain;
+}
+
+/* ---------- Error inside a panel ---------- */
+
+.alert {
+  display: grid;
+  grid-template-columns: 20px 1fr;
+  gap: 4px 10px;
+}
+
+.alert-icon {
+  grid-row: span 2;
+  width: 20px;
+  height: 20px;
+  margin-top: 1px;
+  color: var(--danger);
+}
+
+.alert-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.alert-title {
+  font-weight: 700;
+}
+
+.alert-detail {
+  color: var(--ink-2);
+  font-size: 14px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  user-select: text;
+}
+
+/* ---------- Toast: ink, bottom centre, with an optional link and Undo ---------- */
+
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  /* as wide as its content: centred with left: 50%, it would otherwise shrink to half the window */
+  width: max-content;
+  min-height: 52px;
+  max-width: min(560px, calc(100% - 32px));
+  padding: 10px 10px 10px 14px;
+  overflow: hidden;
+  border-radius: 16px;
+  background: var(--ink);
+  color: var(--paper);
+  box-shadow: 0 18px 40px -12px rgba(29, 28, 44, 0.6);
+  font: 500 15px/1.35 var(--font);
+  opacity: 0;
+  transform: translate(-50%, 12px);
+  pointer-events: none;
+  transition:
+    opacity 200ms var(--ease),
+    transform 200ms var(--ease);
+}
+
+.toast.is-visible {
+  opacity: 1;
+  transform: translate(-50%, 0);
+  pointer-events: auto;
+}
+
+.toast-icon {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  padding: 6px;
+  border-radius: 50%;
+  background: var(--orange);
+  color: var(--ink);
+}
+
+.toast-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.toast-icon--alert {
+  padding: 0;
+  background: transparent;
+  color: var(--danger-light);
+}
+
+.toast-text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  margin-right: auto;
+}
+
+.toast-title {
+  font-weight: 600;
+}
+
+.toast-meta {
+  color: rgba(253, 252, 252, 0.68);
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.toast-link {
+  flex: none;
+  border-radius: var(--radius-sm);
+  color: var(--orange);
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  white-space: nowrap;
+}
+
+.toast-link:hover {
+  text-decoration-thickness: 2px;
+}
+
+/* Ghost pill on ink; add .caps for the label. */
+.toast-undo {
+  flex: none;
+  height: 34px;
+  padding: 0 14px;
+  border: 1px solid rgba(253, 252, 252, 0.28);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--paper);
+  cursor: pointer;
+}
+
+.toast-undo:hover {
+  background: rgba(253, 252, 252, 0.1);
+}
+
+.toast-link:focus-visible,
+.toast-undo:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
+}
+
+/* How long Undo is still possible; set animation-duration from script to match. */
+.toast-timer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: var(--gold);
+  transform-origin: left;
+  animation: drain 10s linear forwards;
+}
+
+@keyframes drain {
+  to {
+    transform: scaleX(0);
+  }
+}
+
+/* Below this width a centred 560px toast can reach a one-pill dock, so it moves up above it.
+   With more in the dock, raise the breakpoint (or keep the toast up at every width). */
+@media (max-width: 1000px) {
+  .toast {
+    bottom: 76px;
+  }
+}
+
+/* ---------- Reduced motion: keep the information, drop the movement ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .launcher,
+  .dock-action,
+  .toast {
+    transition: none;
+  }
+
+  .launcher:hover,
+  .dock-action:hover:not(:disabled) {
+    transform: none;
+  }
+
+  .panel.is-open,
+  .pin.is-visible {
+    animation: none;
+  }
+
+  .progress-seg.is-active::after {
+    animation: none;
+    transform: scaleX(0.5);
+  }
+}

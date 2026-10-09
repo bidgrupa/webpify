@@ -127,7 +127,7 @@ webpify only works on sites you add. For our Lauris CMS, add both the live and t
 
 For any other site, type its address in **Page address** with `/*` at the end (for example `https://www.example.com/*`) instead of clicking a preset.
 
-That's it. Upload images as you normally would. A small dark notice in the bottom-right corner of the page shows that webpify is converting them and how much smaller they got.
+That's it. Upload images as you normally would. A small dark notice at the bottom of the page shows that webpify is converting them and how much smaller they got.
 
 ### Settings worth knowing
 

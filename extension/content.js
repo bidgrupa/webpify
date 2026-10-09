@@ -127,7 +127,7 @@
     // Hand the selection to the page as if the user had just picked it.
     input.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
     input.dispatchEvent(new Event("change", { bubbles: true }));
-    showToast(stats ? summary(stats) : "conversion failed, kept the originals", 4000);
+    showOutcome(stats);
   }
 
   // --- Drop zones ------------------------------------------------------------
@@ -195,7 +195,7 @@
       shiftKey: original.shiftKey,
     });
     (target.isConnected ? target : zone).dispatchEvent(drop);
-    showToast(outcome ? summary(outcome.stats) : "conversion failed, kept the originals", 4000);
+    showOutcome(outcome?.stats ?? null);
   }
 
   // --- Conversion ------------------------------------------------------------
@@ -206,7 +206,7 @@
    */
   async function convertAll(files, isCurrent) {
     const total = files.filter(isConvertible).length;
-    const stats = { converted: 0, total, before: 0, after: 0 };
+    const stats = { converted: 0, failed: 0, total, before: 0, after: 0 };
     const results = [];
     let index = 0;
     for (const file of files) {
@@ -214,11 +214,14 @@
         results.push(file);
         continue;
       }
-      showToast(`converting ${++index}/${total} to WebP…`);
-      const webp = await convertFile(file).catch((error) => {
+      showProgress(++index, total);
+      let webp = null;
+      try {
+        webp = await convertFile(file);
+      } catch (error) {
         console.warn(`[webpify] kept ${file.name}:`, error);
-        return null;
-      });
+        stats.failed++;
+      }
       if (!isCurrent()) return null;
       if (webp && !(settings.keepIfLarger && webp.size >= file.size)) {
         results.push(webp);
@@ -265,40 +268,178 @@
     return transfer;
   }
 
-  // --- Toast -----------------------------------------------------------------
+  // --- Toast ---------------------------------------------------------------
+  // The bid .toast (styles/overlay.css) in a shadow root, so the site's CSS can't reach it
+  // and ours can't leak out. The background hands over the stylesheet text, which keeps every
+  // extension file private to the extension.
 
-  let toastHost = null;
-  let toastText = null;
+  const SVG_NS = "http://www.w3.org/2000/svg";
+  const ICONS = {
+    // The orange round check of a finished toast.
+    check: ["0 0 16 16", "2.2", [["path", { d: "M3.5 8.5l3 3 6-7" }]]],
+    // The danger mark for an error.
+    alert: ["0 0 20 20", "1.8", [
+      ["circle", { cx: "10", cy: "10", r: "8.1" }],
+      ["path", { d: "M10 5.75v5" }],
+      ["circle", { cx: "10", cy: "14", r: "0.9", fill: "currentColor", stroke: "none" }],
+    ]],
+  };
+  const MAX_SEGMENTS = 12; // one progress segment per image, up to this many
+
+  let toastMount = null; // Promise of the .toast element, created on first use
   let hideTimer = 0;
 
-  function showToast(message, hideAfterMs = 0) {
-    if (!toastHost) {
-      toastHost = document.createElement("webpify-toast");
-      const root = toastHost.attachShadow({ mode: "closed" });
-      root.innerHTML = `<style>
-        :host { all: initial; position: fixed; right: 16px; bottom: 16px; z-index: 2147483647; }
-        div { font: 13px/1.4 system-ui, sans-serif; color: #fff; background: #1d1c2c;
-              padding: 10px 14px; border-radius: 8px; box-shadow: 0 4px 16px rgb(0 0 0 / 0.3); }
-      </style><div></div>`;
-      toastText = root.querySelector("div");
+  function toastElement() {
+    toastMount ??= mountToast().catch((error) => {
+      toastMount = null;
+      throw error;
+    });
+    return toastMount;
+  }
+
+  async function mountToast() {
+    const response = await api.runtime.sendMessage({ type: "ui-css" });
+    if (!response?.ok) throw new Error(response?.error ?? "no styles");
+    const host = document.createElement("webpify-ui");
+    host.style.setProperty("all", "initial"); // through the CSSOM, so a site's CSP can't block it
+    const root = host.attachShadow({ mode: "closed" });
+    adoptStyles(root, response.css);
+    const toast = document.createElement("div");
+    toast.className = "toast";
+    toast.setAttribute("role", "status");
+    toast.setAttribute("aria-live", "polite");
+    root.append(toast);
+    document.documentElement.append(host); // <html>, not <body>: some sites replace <body>
+    return toast;
+  }
+
+  /** Constructed stylesheets are immune to a site's style-src CSP; Firefox content scripts need the <style> fallback. */
+  function adoptStyles(root, css) {
+    try {
+      const sheet = new CSSStyleSheet();
+      sheet.replaceSync(css);
+      root.adoptedStyleSheets = [sheet];
+    } catch {
+      const style = document.createElement("style");
+      style.textContent = css;
+      root.prepend(style);
     }
-    if (!toastHost.isConnected) document.documentElement.append(toastHost);
-    toastText.textContent = `webpify: ${message}`;
+  }
+
+  async function renderToast({ icon = null, title, meta = "", progress = null }, hideAfterMs = 0) {
+    let toast;
+    try {
+      toast = await toastElement();
+    } catch (error) {
+      console.warn("[webpify] can't show the notice:", error); // conversion works without it
+      return;
+    }
+    if (!toast.isConnected) document.documentElement.append(toast.getRootNode().host);
+
+    const parts = [];
+    if (icon) {
+      const mark = span(icon === "alert" ? "toast-icon toast-icon--alert" : "toast-icon");
+      mark.append(svgIcon(...ICONS[icon]));
+      parts.push(mark);
+    }
+    const text = span("toast-text");
+    text.append(span("toast-title", title));
+    if (meta) text.append(span("toast-meta", meta));
+    if (progress && progress.total <= MAX_SEGMENTS) text.append(progressTrack(progress));
+    parts.push(text);
+    toast.replaceChildren(...parts);
+
+    // A frame after it's in the page, so it slides in rather than appearing.
+    requestAnimationFrame(() => toast.classList.add("is-visible"));
     clearTimeout(hideTimer);
     if (hideAfterMs > 0) hideTimer = setTimeout(hideToast, hideAfterMs);
   }
 
   function hideToast() {
     clearTimeout(hideTimer);
-    toastHost?.remove();
+    toastMount?.then((toast) => toast.classList.remove("is-visible"), () => {});
   }
 
-  function summary({ converted, total, before, after }) {
-    if (converted === 0) return total === 1 ? "kept the original image" : "kept the original images";
+  /** A line icon in the bid manner: round caps and joins, currentColor. */
+  function svgIcon(viewBox, strokeWidth, shapes) {
+    const svg = setAttributes(document.createElementNS(SVG_NS, "svg"), {
+      viewBox,
+      fill: "none",
+      stroke: "currentColor",
+      "stroke-width": strokeWidth,
+      "stroke-linecap": "round",
+      "stroke-linejoin": "round",
+      "aria-hidden": "true",
+    });
+    for (const [tag, attributes] of shapes) svg.append(setAttributes(document.createElementNS(SVG_NS, tag), attributes));
+    return svg;
+  }
+
+  function setAttributes(element, attributes) {
+    for (const [name, value] of Object.entries(attributes)) element.setAttribute(name, value);
+    return element;
+  }
+
+  function span(className, text) {
+    const element = document.createElement("span");
+    element.className = className;
+    if (text !== undefined) element.textContent = text;
+    return element;
+  }
+
+  /** Earlier images done, the current one filling with gold. */
+  function progressTrack({ current, total }) {
+    const track = span("progress-track");
+    for (let i = 1; i <= total; i++) {
+      track.append(span(i < current ? "progress-seg is-done" : i === current ? "progress-seg is-active" : "progress-seg"));
+    }
+    return track;
+  }
+
+  function showProgress(current, total) {
+    const title = total === 1 ? "Converting the image to WebP" : `Converting ${current} of ${total} images to WebP`;
+    renderToast({ title, progress: { current, total } });
+  }
+
+  /** The result: what was converted and saved, or what was kept and why. */
+  function showOutcome(stats) {
+    const plural = (n, one, many) => (n === 1 ? one : many);
+    if (!stats || (stats.converted === 0 && stats.failed > 0)) {
+      const n = stats?.total ?? 1;
+      renderToast(
+        {
+          icon: "alert",
+          title: plural(n, "The image wasn't converted", "The images weren't converted"),
+          meta: plural(n, "The original file is used instead.", "The original files are used instead."),
+        },
+        7000,
+      );
+      return;
+    }
+    const { converted, failed, total, before, after } = stats;
+    if (converted === 0) {
+      renderToast(
+        {
+          title: plural(total, "Kept the original image", "Kept the original images"),
+          meta: plural(total, "The WebP version wasn't smaller.", "The WebP versions weren't smaller."),
+        },
+        3500,
+      );
+      return;
+    }
     const saved = Math.round((1 - after / before) * 100);
-    const kept = total - converted;
-    const keptNote = kept > 0 ? `, ${kept} kept as is` : "";
-    return `${converted} image${converted === 1 ? "" : "s"} → WebP, ${formatBytes(before)} → ${formatBytes(after)} (−${saved}%)${keptNote}`;
+    const notes = [`${formatBytes(before)} → ${formatBytes(after)}, ${saved}% smaller`];
+    const kept = total - converted - failed;
+    if (kept > 0) notes.push(`${kept} kept as ${plural(kept, "it was", "they were")}`);
+    if (failed > 0) notes.push(`${failed} couldn't be converted`);
+    renderToast(
+      {
+        icon: "check",
+        title: `${converted} ${plural(converted, "image", "images")} converted to WebP`,
+        meta: notes.join(" · "),
+      },
+      failed > 0 ? 7000 : 3500,
+    );
   }
 
   function formatBytes(bytes) {

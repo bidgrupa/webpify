@@ -1,0 +1,34 @@
+/*
+ * webpify's on-page notice: the bid .toast from styles/overlay.css, plus what webpify needs.
+ * Loaded into the content script's shadow root after the bid files (see UI_CSS_FILES in
+ * background.js). Values come from styles/tokens.css.
+ */
+
+/* Text only (no Undo or link), so the right padding matches the left. */
+.toast {
+  padding-right: 18px;
+}
+
+/* overlay.css lifts the toast above a launcher dock below 1000px; webpify has no dock. */
+@media (max-width: 1000px) {
+  .toast {
+    bottom: 24px;
+  }
+}
+
+/* One segment per image while converting. */
+.toast .progress-track {
+  width: 220px;
+  max-width: 100%;
+  margin-top: 6px;
+}
+
+/* On ink the --line grey is too bright for an empty segment; paper at low opacity, like the
+   other secondary marks on ink. */
+.toast .progress-seg {
+  background: rgba(253, 252, 252, 0.2);
+}
+
+.toast .progress-seg.is-done {
+  background: var(--orange-dark);
+}
