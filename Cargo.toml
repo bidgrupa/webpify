@@ -1,6 +1,6 @@
 [package]
 name = "webpify"
-version = "0.2.0"
+version = "0.3.0"
 description = "Image to WebP converter (Rust/WASM) for the webpify browser extension"
 # zenwebp is AGPL-3.0-only, so the extension is too.
 license = "AGPL-3.0-only"
