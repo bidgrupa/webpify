@@ -115,25 +115,31 @@ Ask the person who looks after webpify for a signed version if you need it every
 
 ## Choose your sites
 
-webpify only works on sites you add. For our Lauris CMS, add both the live and the stage address. Do this once per site:
+webpify only works on sites you turn it on for. For our Lauris CMS, do this on both the live and the stage CMS (`admin.lauris.io` and `admin-stage.lauris.io`):
 
-1. Click the **webpify** icon. The settings page opens.
-2. Under **Sites**, next to **Lauris CMS**, click **admin.lauris.io**. This fills in `https://admin.lauris.io/*` for you.
-3. Leave **Upload fields (optional)** empty.
-4. Click **Add site**.
-5. Your browser asks for permission to access that site. Click **Allow**.
-6. Repeat steps 2–5 with **admin-stage.lauris.io** (`https://admin-stage.lauris.io/*`).
-7. Reload any tabs where the CMS is already open.
+1. Open the CMS in your browser.
+2. Click the **webpify** icon in the toolbar. A small window opens.
+3. Turn on **Convert uploads on this site**.
+4. Your browser asks for permission to access that site. Click **Allow**.
 
-For any other site, type its address in **Page address** with `/*` at the end (for example `https://www.example.com/*`) instead of clicking a preset.
+That's it, no reload needed. Upload images as you normally would. A small dark notice at the bottom of the page shows that webpify is converting them and how much smaller they got.
 
-That's it. Upload images as you normally would. A small dark notice at the bottom of the page shows that webpify is converting them and how much smaller they got.
+To turn it off for a site, click the icon there and turn the switch off.
+
+**Need one upload to stay exactly as it is?** Click the webpify icon and choose **Pause for 10 minutes**. The icon shows "off" while paused, and webpify turns itself back on afterwards.
+
+**Prefer the settings page?** Under **Sites**, next to **Lauris CMS**, click **admin.lauris.io**, then **Add site**, and allow access. For any other site, type its address in **Page address** with `/*` at the end (for example `https://www.example.com/*`).
 
 ### Settings worth knowing
 
+Click the webpify icon, then **Open settings**.
+
 - **Quality:** 80 is a good default. For photos on our CMS, 90 keeps more detail.
-- **Max width/height:** big photos are scaled down to this size. 0 keeps the original size.
+- **Maximum width and height:** big photos are scaled down to this size. 0 keeps the original size.
 - **Keep the original when the WebP would be larger:** leave this on.
+- **Keep screenshots, logos and graphics sharp:** leave this on. Screenshots and logos then stay crisp, and are often smaller too.
+
+SVG, GIF and other files that aren't JPEG, PNG or BMP are never converted; they are uploaded as they are.
 
 ---
 
@@ -153,7 +159,8 @@ When there's a new version, download the new file from the [latest release](../.
 ## Something isn't working
 
 - **Images are uploaded unchanged.**
-  - Open the webpify settings and check that the site is listed with **Access granted**. If it says **No access**, click **Grant access** and allow it.
+  - Click the webpify icon on that site and check that **Convert uploads on this site** is on. If it says webpify needs access again, click **Allow access**.
+  - Check that webpify isn't paused (the icon shows "off" while it is).
   - Reload the page and try again.
   - Some upload fields only accept JPEG or PNG; webpify leaves those alone on purpose.
 - **"Manifest file is missing or unreadable"** when loading in Chrome, Edge or Brave: you picked the wrong folder. Pick the folder that directly contains a file called `manifest.json`. After unzipping, that is sometimes one folder deeper.

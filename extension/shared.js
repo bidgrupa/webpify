@@ -10,8 +10,10 @@ globalThis.webpify = {
     quality: 80,
     maxDimension: 2560, // 0 keeps the original size
     lossless: false,
+    sharpGraphics: true, // PNG/BMP screenshots and logos go lossless when that stays small
     keepIfLarger: true, // keep the original when the WebP comes out bigger
     sites: [], // [{ pattern, selector }]
+    pausedUntil: 0, // timestamp; nothing is converted anywhere until then
   }),
 
   /** True when `href` matches a WebExtension match pattern. Ports are ignored, as in browsers. */

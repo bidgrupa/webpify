@@ -1,0 +1,18 @@
+/* webpify additions to the bid popup (styles/page.css, body.popup). Values from styles/tokens.css. */
+
+/* Long host names wrap instead of widening the popup. */
+.masthead p {
+  overflow-wrap: anywhere;
+}
+
+/* A site covered by a broader pattern from the settings can't be switched here. */
+.switch input:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* The pause button sits on its own line, not stretched across the popup. */
+#pause,
+#grant {
+  justify-self: start;
+}

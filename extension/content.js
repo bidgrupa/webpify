@@ -31,6 +31,7 @@
   function activeSelector() {
     // runtime.id disappears when the extension is reloaded and this script is orphaned.
     if (!settings || !api.runtime?.id) return null;
+    if (settings.pausedUntil > Date.now()) return null; // paused from the toolbar popup
     const site = settings.sites.find((s) => matchesPattern(s.pattern, location.href));
     return site ? site.selector || DEFAULT_SELECTOR : null;
   }
@@ -240,6 +241,7 @@
       quality: settings.quality,
       maxDimension: settings.maxDimension,
       lossless: settings.lossless,
+      sharpGraphics: settings.sharpGraphics,
     };
     const response = await withTimeout(
       api.runtime.sendMessage({ type: "convert", file, options }),

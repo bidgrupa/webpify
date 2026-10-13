@@ -20,12 +20,12 @@ webpify makes the images you upload smaller by converting them to WebP the momen
 
 Choose the sites where it should work. On those sites, images you select with an upload button or drag onto an upload area are converted automatically, and the site uploads the smaller WebP files instead of the originals. It works with standard file upload fields and with common drag-and-drop upload areas.
 
-Settings let you pick the quality, a maximum width and height for large photos, and lossless conversion. If a WebP would come out larger than the original, the original is kept. Photos keep their colour profile, so colours stay true, and location and camera details are removed. A small notice at the bottom of the page shows how many images were converted and how much space was saved.
+Settings let you pick the quality, a maximum width and height for large photos, and lossless conversion. Screenshots, logos and other graphics are kept sharp automatically. If a WebP would come out larger than the original, the original is kept. Photos keep their colour profile, so colours stay true, and location and camera details are removed. A small notice at the bottom of the page shows how many images were converted and how much space was saved.
 
 How to use it:
-1. Open the extension's settings and add a site, for example https://cms.example.com/*.
-2. Allow access to that site when your browser asks.
-3. Reload the site and upload images as usual.
+1. Open the site where you upload images and click the webpify icon.
+2. Turn on "Convert uploads on this site" and allow access when your browser asks.
+3. Upload images as usual. To upload one image unchanged, pause webpify for 10 minutes from the same icon.
 
 Privacy: images are converted on your device and are never sent anywhere by the extension. It has no analytics and makes no network requests of its own. It can only see the sites you add, and only after you allow it.
 
@@ -59,7 +59,9 @@ Screenshot notes (take them in Chrome with the window sized to 1280×800):
 | Permission | Type | Justification |
 |---|---|---|
 | `storage` | permissions | Saves the user's settings on the device: conversion quality, maximum size, the lossless and keep-original options, and the list of sites with their upload field selectors. |
-| `scripting` | permissions | Registers the upload-handling script only on the sites the user adds in the settings, so it never runs on any other page. |
+| `scripting` | permissions | Registers the upload-handling script only on the sites the user turns on, so it never runs on any other page, and starts it on the open tab when the user turns a site on from the toolbar. |
+| `activeTab` | permissions | When the user clicks the toolbar icon, the popup reads the current tab's address so it can offer to turn conversion on for that site. |
+| `alarms` | permissions | Ends a pause the user starts from the toolbar ("Pause for 10 minutes") on time, even if the browser stopped the background in between. |
 | `*://*/*` | optional_host_permissions | Not granted at install. When the user adds a site in the settings, the extension asks for access to that one site. It needs this access to see the images chosen in that site's upload fields and to hand back the converted WebP files. The user can revoke it at any time. |
 
 Remote code: none. All code ships in the package. The image converter is a WebAssembly module compiled from the Rust source in the public repository (`src/`). Builds are reproducible: `./build.sh` on the tagged commit produces an identical `.wasm`.

@@ -37,7 +37,9 @@ The default selector `input[type="file"], .dropzone` covers both Dropzone.js pat
 - Conversion runs in the extension's background, so the page stays responsive and the `.wasm` is never exposed to websites (no `web_accessible_resources`).
 - Inputs whose `accept` rules out WebP (for example `image/jpeg,image/png`) are left alone. GIF, WebP, SVG and other files pass through unchanged.
 - If a conversion fails, times out, or comes out larger than the original, the original file is kept. The page always gets its events.
-- Sites are added on the options page. The extension asks for access to each one and registers its content script there at runtime.
+- Sites are turned on from the toolbar popup ("Convert uploads on this site", which also starts it on the open tab) or added on the options page. The extension asks for access to each one and registers its content script there at runtime. Firefox closes the popup while the permission prompt is open, so the background finishes turning a site on.
+- The popup can pause conversion everywhere for 10 minutes; the icon shows "off" until an alarm ends the pause.
+- Screenshots, logos and other graphics: a PNG or BMP with few colours (up to 32,768) is also encoded lossless, and keeps that when it's at most 1.5× the lossy size. Measured on samples: a UI screenshot came out 9× smaller lossless, a logo 1.3× larger, a photo saved as PNG 7.8× larger (so it stays lossy).
 
 ## Build
 
@@ -53,6 +55,7 @@ The CLI version must match the `wasm-bindgen` version pinned in `Cargo.toml`. `r
 ./build.sh          # → extension/pkg/webpify.js + webpify_bg.wasm (~1 MB), dist/webpify.zip
 cargo test          # native unit tests of the Rust pipeline
 node --experimental-wasm-exnref tests/wasm-smoke.mjs path/to/photo.jpg   # the built .wasm, in Node
+node --experimental-wasm-exnref tests/background-test.mjs                 # popup flows in background.js, faked browser APIs
 ./release.sh        # all release packages in dist/ (what the GitHub workflow publishes)
 scripts/render-icons.sh   # re-render extension/icons/ from assets/*.svg (needs Inkscape)
 ```

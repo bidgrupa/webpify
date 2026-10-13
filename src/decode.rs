@@ -3,13 +3,14 @@
 use std::io::Cursor;
 
 use image::metadata::Orientation;
-use image::{DynamicImage, ImageDecoder, ImageReader};
+use image::{DynamicImage, ImageDecoder, ImageFormat, ImageReader};
 
 use crate::error::ConvertResult;
 
-/// Decoded pixels plus the embedded ICC colour profile, if the file had one.
+/// Decoded pixels, the format they came in, and the embedded ICC colour profile, if any.
 pub struct Decoded {
     pub image: DynamicImage,
+    pub format: Option<ImageFormat>,
     pub icc_profile: Option<Vec<u8>>,
 }
 
@@ -17,6 +18,7 @@ pub struct Decoded {
 /// orientation so pixels are upright, and keep its ICC profile.
 pub fn load_oriented(bytes: &[u8]) -> ConvertResult<Decoded> {
     let reader = ImageReader::new(Cursor::new(bytes)).with_guessed_format()?;
+    let format = reader.format();
     let mut decoder = reader.into_decoder()?;
     let orientation = decoder
         .orientation()
@@ -25,7 +27,7 @@ pub fn load_oriented(bytes: &[u8]) -> ConvertResult<Decoded> {
     let icc_profile = decoder.icc_profile().ok().flatten();
     let mut image = DynamicImage::from_decoder(decoder)?;
     image.apply_orientation(orientation);
-    Ok(Decoded { image, icc_profile })
+    Ok(Decoded { image, format, icc_profile })
 }
 
 #[cfg(test)]

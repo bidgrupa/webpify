@@ -34,6 +34,7 @@ async function loadSettings() {
   fields.quality.value = settings.quality;
   fields.maxDimension.value = settings.maxDimension;
   fields.lossless.checked = settings.lossless;
+  fields.sharpGraphics.checked = settings.sharpGraphics;
   fields.keepIfLarger.checked = settings.keepIfLarger;
   qualityValue.value = settings.quality;
 }
@@ -46,6 +47,7 @@ settingsForm.addEventListener("input", async () => {
     quality,
     maxDimension: Math.max(0, Math.floor(Number(fields.maxDimension.value) || 0)),
     lossless: fields.lossless.checked,
+    sharpGraphics: fields.sharpGraphics.checked,
     keepIfLarger: fields.keepIfLarger.checked,
   });
   flashSaved();

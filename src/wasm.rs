@@ -21,7 +21,8 @@ fn start() {
 #[wasm_bindgen(js_name = ensureReady)]
 pub fn ensure_ready() {}
 
-/// Convert an encoded JPEG/PNG/BMP to WebP. `max_dimension` 0 keeps the size.
+/// Convert an encoded JPEG/PNG/BMP to WebP. `max_dimension` 0 keeps the size;
+/// `sharp_graphics` lets PNG/BMP graphics go lossless (see `crate::convert`).
 /// Throws an `Error` with a readable message on failure.
 #[wasm_bindgen(js_name = convertToWebp)]
 pub fn convert_to_webp(
@@ -29,11 +30,13 @@ pub fn convert_to_webp(
     quality: f32,
     max_dimension: u32,
     lossless: bool,
+    sharp_graphics: bool,
 ) -> Result<Vec<u8>, JsError> {
     let opts = Options {
         quality,
         max_dimension: (max_dimension > 0).then_some(max_dimension),
         lossless,
+        sharp_graphics,
     };
     crate::convert(bytes, &opts).map_err(|e| JsError::new(&e.to_string()))
 }

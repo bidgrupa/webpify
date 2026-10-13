@@ -17,7 +17,7 @@ const kb = (n) => `${(n / 1024).toFixed(0)} KB`;
 
 function convert(bytes) {
   ensureReady();
-  return convertToWebp(bytes, QUALITY, MAX_DIMENSION, false);
+  return convertToWebp(bytes, QUALITY, MAX_DIMENSION, false, true);
 }
 
 function isWebp(bytes) {
