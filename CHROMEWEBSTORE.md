@@ -34,8 +34,11 @@ Source code and support: https://github.com/bidgrupa/webpify
 **Category**
 Productivity › Tools
 
-**Single purpose**
-Converts images to WebP format when the user uploads them on websites they have chosen.
+**Single purpose** (Privacy tab)
+
+```
+webpify converts images to the WebP format right before the user uploads them, on websites the user has chosen. When the user picks or drops JPEG, PNG or BMP images in an upload field on one of those sites, webpify converts them on the device and hands the smaller WebP files to the site's own upload. Every other part of the extension serves this purpose: the toolbar popup turns conversion on or off for the current site and can pause it for 10 minutes, and the settings page sets the quality, the maximum image size and the list of sites.
+```
 
 **Primary language**
 English
@@ -121,7 +124,7 @@ The converter is WebAssembly compiled from the Rust source in https://github.com
 
 | Version | Date | Changes | Status |
 |---|---|---|---|
-| 0.3.1 | 2026-10-14 | The Chrome package requires Chrome 148: older versions can't pass files to the converter. | First Chrome Web Store submission |
+| 0.3.1 | 2026-10-14 | The Chrome package requires Chrome 148: older versions can't pass files to the converter. | In review (submitted 2026-10-14) |
 | 0.3.0 | 2026-10-13 | Toolbar popup to turn a site on or off and pause for 10 minutes; screenshots, logos and graphics kept sharp. New permissions: activeTab, alarms. | Internal (GitHub Releases) |
 | 0.2.0 | 2026-10-09 | Settings page and on-page notice in the bid look, Lauris CMS presets. | Internal (GitHub Releases) |
 | 0.1.0 | 2026-10-09 | First release: WebP conversion for file inputs and Dropzone.js drop areas, per-site settings, colour profiles kept. | Internal (GitHub Releases) |
