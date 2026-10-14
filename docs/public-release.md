@@ -7,7 +7,7 @@ webpify is shared internally through GitHub Releases (see [RELEASING.md](../RELE
 | Browser | Channel | Why |
 |---|---|---|
 | Chrome, Edge, Brave | Chrome Web Store, **Unlisted** | Anyone with the link can install it (employees and clients), it doesn't show up in search, and updates install automatically. "Private" would limit it to one Google Workspace domain or a list of accounts, which leaves clients out. Edge users can install from the Chrome Web Store link too. |
-| Firefox, Zen | Mozilla-signed `.xpi` on GitHub Releases ("unlisted" on addons.mozilla.org) | Already supported by the release workflow once the `AMO_JWT_*` secrets are set (see RELEASING.md). A public listing on addons.mozilla.org is optional. |
+| Firefox, Zen | addons.mozilla.org, **listed** | AMO has no link-only option: an add-on is either listed (public, searchable) or self-distributed. Listed gives one-click installs and automatic updates from AMO, with no update feed of our own. |
 
 ## Before the first store submission
 
@@ -68,10 +68,33 @@ From the next tag on, the job uploads the release's Chrome zip and submits it fo
 
 ## addons.mozilla.org
 
-Unlisted signing is already automated (RELEASING.md, "Mozilla signing"). A **public listing** on addons.mozilla.org needs:
-1. `web-ext sign --channel=listed` with an `--amo-metadata` JSON file (name, summary, categories, licence). Required for the first listed version.
-2. **No `update_url`:** listed add-ons get updates from addons.mozilla.org, so `scripts/package.mjs` would have to drop `update_url` for listed builds.
-3. **Source code with every version** (`--upload-source-code`, as the workflow already does). Reviewers rebuild it and compare. By default they build on ARM64 Ubuntu 24.04; our reproducible build was only checked on x86_64.
+Like the Chrome Web Store: the first version goes in by hand, then the release workflow submits every tagged release (the "Submit to addons.mozilla.org" step), and Firefox updates installed copies from AMO within a day of approval. Everything to paste is in [FIREFOXADDONS.md](../FIREFOXADDONS.md).
+
+### 1. Prepare (once)
+
+1. **Mozilla account.** A BID-owned account at <https://addons.mozilla.org> (Log in creates a Mozilla account), not a personal one. Turn on two-step authentication in the account settings; AMO requires it to submit add-ons.
+2. **Developer profile.** On AMO, **Tools → Submit a New Add-on** asks you to accept the developer agreement and set a display name, e.g. BID grupa. It's shown on the listing.
+3. **Files.** The Firefox package without `update_url`: `dist/webpify-firefox-<v>-unsigned.xpi` from `node scripts/package.mjs firefox` (the Firefox packages attached to releases up to 0.3.1 still have it). And the source zip of the same version from GitHub Releases, `webpify-source-<v>.zip`.
+
+### 2. First submission (by hand)
+
+1. <https://addons.mozilla.org/developers/addon/submit/distribution> → **On this site** → upload the package. Compatibility: Firefox only. Validation shows one warning about Firefox for Android; it doesn't apply.
+2. **Source code:** Yes → upload the source zip.
+3. **Describe add-on:** name, summary, description, category, support email and website, licence (AGPL-3.0-only), privacy policy, and the notes to reviewer, all from FIREFOXADDONS.md. The add-on ID `webpify@bid.agency` is tied to this account from now on.
+4. **Submit.** Listed versions usually pass the automatic review and are public within hours; some are picked for a human review first, which can take days. AMO emails the account.
+5. **Edit Product Page:** the three screenshots with their captions, and the homepage.
+6. **Once it's public** (`https://addons.mozilla.org/firefox/addon/webpify/`):
+   - Point INSTALL.md's Firefox and Zen sections at the listing, and the release notes in `.github/workflows/release.yml`.
+   - People with a temporary or unsigned copy install from the listing. It's the same add-on ID, so Zen users who installed the unsigned file keep their settings.
+
+### 3. Updates on every release (once)
+
+1. **API keys.** On AMO, **Tools → Manage API Keys** → generate credentials.
+2. **GitHub.** Repository **Settings → Secrets and variables → Actions** → secrets `AMO_JWT_ISSUER` (the JWT issuer) and `AMO_JWT_SECRET` (the JWT secret).
+
+From the next tag on, the workflow submits the version as listed, with the source zip, the release commit's message body as release notes, and [store/firefox/approval-notes.txt](../store/firefox/approval-notes.txt) for the reviewers. It doesn't wait for the review. Things to know:
+- **Each version number once.** AMO refuses a version number it has seen, even a rejected one. Fixing a release means a new version.
+- **Reviewers rebuild the source.** The approval notes and the README's "Building from source" give the steps, on x86_64 Ubuntu 24.04. The workflow's arm64 job checks that their default ARM64 machine gives the same `.wasm`.
 
 ## Reproducible build
 
@@ -81,4 +104,4 @@ Mozilla's reviewers must get byte-identical output from the source zip. This is 
 - `build.sh` maps local paths away with `--remap-path-prefix`.
 - The wasm-bindgen CLI is pinned to 0.2.129.
 
-GitHub's release build of v0.1.0 matched a local build except for one string: zenwebp embeds `GITHUB_SHA` when it's set. `build.sh` clears that variable since v0.1.0, so from the next release on, CI, local and reviewer builds should be byte-identical. Check this on the first release you submit to Mozilla. The reviewer steps are in the README under "Building from source".
+Checked for v0.3.1: the `.wasm` in the GitHub release is byte-identical to a local build, and rebuilding from the release's source zip in a fresh folder (build.sh, then package.mjs) gives a Firefox package identical to the one submitted to AMO. Only on x86_64 so far; the release workflow's arm64 job covers ARM64. The reviewer steps are in the README under "Building from source".

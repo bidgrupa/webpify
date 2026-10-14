@@ -4,8 +4,8 @@ name: Release
 #   - Push a tag like v0.1.0 (it must match extension/manifest.json) to publish a release.
 #   - "Run workflow" on the Actions tab builds the same packages as downloadable artifacts
 #     without publishing anything, which is handy for testing.
-# Mozilla signing is optional: with the AMO_JWT_ISSUER and AMO_JWT_SECRET repository secrets
-# set, tagged releases also get a signed .xpi that regular Firefox installs. See RELEASING.md.
+# addons.mozilla.org: with the AMO_JWT_ISSUER and AMO_JWT_SECRET repository secrets set, tagged
+# releases are also submitted there as listed versions. See docs/public-release.md.
 # Chrome Web Store: with the CWS_SERVICE_ACCOUNT secret and the CWS_PUBLISHER_ID and CWS_ITEM_ID
 # variables set, tagged releases are also submitted there. See docs/public-release.md.
 
@@ -85,6 +85,56 @@ jobs:
           path: dist/webpify-source-*.zip
           if-no-files-found: error
 
+  arm64:
+    name: Check the build on ARM64
+    # Mozilla's reviewers rebuild the source on ARM64 Ubuntu 24.04 unless told otherwise, and
+    # their .wasm has to match ours byte for byte. This builds it there and compares.
+    needs: build
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install rustup, zip and the pinned Rust toolchain
+        run: |
+          if ! command -v rustup > /dev/null; then
+            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain none
+            echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+            export PATH="$HOME/.cargo/bin:$PATH"
+          fi
+          command -v zip > /dev/null || sudo apt-get install -y zip
+          channel=$(sed -n 's/^channel = "\(.*\)"/\1/p' rust-toolchain.toml)
+          rustup toolchain install "$channel" --profile minimal --target wasm32-unknown-unknown
+
+      - name: Restore the Rust cache
+        uses: actions/cache@v6
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            ~/.cargo/bin/wasm-bindgen
+            target
+          key: rust-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('rust-toolchain.toml', 'Cargo.lock') }}-wasm-bindgen-${{ env.WASM_BINDGEN_VERSION }}
+
+      - name: Install wasm-bindgen
+        run: |
+          if ! wasm-bindgen --version 2>/dev/null | grep -qF "$WASM_BINDGEN_VERSION"; then
+            cargo install wasm-bindgen-cli --version "$WASM_BINDGEN_VERSION" --locked
+          fi
+
+      - name: Build the WebAssembly module
+        run: ./build.sh
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: wasm
+          path: x86_64
+
+      - name: Compare with the x86_64 build
+        run: |
+          cmp extension/pkg/webpify_bg.wasm x86_64/webpify_bg.wasm
+          cmp extension/pkg/webpify.js x86_64/webpify.js
+          echo "The ARM64 build is identical to the x86_64 one."
+
   chrome:
     name: Package for Chrome, Edge and Brave
     needs: build
@@ -138,26 +188,32 @@ jobs:
       - name: Package
         run: node scripts/package.mjs firefox
 
-      # Mozilla accepts each version number only once, so only tagged releases are signed.
-      - name: Sign with Mozilla (unlisted)
+      # Mozilla accepts each version number only once, so only tagged releases are submitted.
+      # The first version went in by hand (docs/public-release.md); this adds the later ones.
+      # Mozilla reviews and signs them, and Firefox updates installed copies from the site.
+      - name: Submit to addons.mozilla.org
         if: env.AMO_JWT_ISSUER != '' && env.AMO_JWT_SECRET != '' && github.ref_type == 'tag'
         run: |
-          npx --yes web-ext@8 sign \
-            --channel=unlisted \
+          # Release notes: the release commit's message body, unwrapped, without trailers.
+          git log -1 --format=%b | sed '/^Co-Authored-By:/d' > release-notes.txt
+          jq -n --rawfile notes release-notes.txt --rawfile approval store/firefox/approval-notes.txt '
+            ($notes | sub("\\s+$"; "") | split("\n\n") | map(gsub("\n(?!- )\\s*"; " ")) | join("\n\n")) as $text
+            | { version: ({ approval_notes: $approval }
+                + (if $text == "" then {} else { release_notes: { "en-US": $text } } end)) }
+          ' > amo-metadata.json
+          npx --yes web-ext@10 sign \
+            --channel=listed \
             --source-dir dist/firefox \
             --upload-source-code "dist/webpify-source-$VERSION.zip" \
-            --artifacts-dir web-ext-artifacts \
+            --amo-metadata amo-metadata.json \
+            --approval-timeout=0 \
             --api-key "$AMO_JWT_ISSUER" \
             --api-secret "$AMO_JWT_SECRET"
-          mv web-ext-artifacts/*.xpi "dist/webpify-firefox-$VERSION.xpi"
-          node scripts/package.mjs updates
 
       - uses: actions/upload-artifact@v7
         with:
           name: firefox
-          path: |
-            dist/webpify-firefox-*.xpi
-            dist/updates.json
+          path: dist/webpify-firefox-*.xpi
           if-no-files-found: error
 
   release:
@@ -189,18 +245,13 @@ jobs:
           VERSION: ${{ needs.build.outputs.version }}
         run: |
           guide="https://github.com/$GITHUB_REPOSITORY/blob/$GITHUB_REF_NAME/INSTALL.md"
-          if [[ -f "dist/webpify-firefox-$VERSION.xpi" ]]; then
-            firefox="- **Firefox or Zen:** \`webpify-firefox-$VERSION.xpi\` (signed by Mozilla, updates itself)"
-          else
-            firefox="- **Zen:** \`webpify-firefox-$VERSION-unsigned.xpi\`
-          - **Firefox:** \`webpify-firefox-$VERSION-unsigned.xpi\`, loaded as a temporary add-on (it is removed when Firefox restarts)"
-          fi
           cat > notes.md <<EOF
           Internal build of webpify $VERSION. **Installation guide: [INSTALL.md]($guide)**
 
           Which file to download:
           - **Chrome, Edge or Brave:** \`webpify-chrome-$VERSION.zip\`
-          $firefox
+          - **Zen:** \`webpify-firefox-$VERSION-unsigned.xpi\`
+          - **Firefox:** \`webpify-firefox-$VERSION-unsigned.xpi\`, loaded as a temporary add-on (it is removed when Firefox restarts)
 
           \`webpify-source-$VERSION.zip\` is the source code (AGPL-3.0).
           EOF

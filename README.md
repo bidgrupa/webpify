@@ -63,12 +63,17 @@ node store/chrome/src/render.mjs   # re-render the Chrome Web Store screenshots 
 
 ### Building from source (for add-on reviewers)
 
-The build is reproducible: the same commit gives a byte-identical `extension/pkg/webpify_bg.wasm` and `webpify.js`. The pinned toolchain plus `--remap-path-prefix` in `build.sh` keep machine-specific paths out of the binary. Checked on x86_64 Linux.
+The build is reproducible: the same commit gives a byte-identical `extension/pkg/webpify_bg.wasm` and `webpify.js`. The pinned toolchain plus `--remap-path-prefix` in `build.sh` keep machine-specific paths out of the binary.
 
-1. Install rustup (<https://rustup.rs>) and `zip`, e.g. on Ubuntu 24.04: `sudo apt install zip` and the rustup script.
-2. Install the bindings generator: `cargo install wasm-bindgen-cli --version 0.2.129 --locked`.
-3. From the source root, run `./build.sh`. Rust 1.93.1 and the wasm32 target are installed from `rust-toolchain.toml` automatically.
-4. Compare `extension/pkg/webpify_bg.wasm` and `extension/pkg/webpify.js` with the same files in the submitted package. Every other file in the package is copied as-is from `extension/`; only `manifest.json` is trimmed per browser by `scripts/package.mjs`.
+**Build environment:** Ubuntu 24.04 on x86_64, the reference (GitHub's `ubuntu-24.04` runner builds the releases). The release workflow also builds on ARM64 Ubuntu 24.04 and checks that the output is identical.
+
+1. Install a C toolchain, curl and zip: `sudo apt install build-essential curl zip`.
+2. Install rustup (<https://rustup.rs>): `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y`, then `. "$HOME/.cargo/env"`.
+3. Install the bindings generator: `cargo install wasm-bindgen-cli --version 0.2.129 --locked`.
+4. From the source root, run `./build.sh`. Rust 1.93.1 and the wasm32 target are installed from `rust-toolchain.toml` automatically.
+5. Run `node scripts/package.mjs firefox` (Node 22 or later). `dist/firefox/` is then identical to the submitted Firefox package.
+
+Only `pkg/webpify_bg.wasm` and `pkg/webpify.js` are generated. Every other file in the package is copied as-is from `extension/`; only `manifest.json` is trimmed per browser by `scripts/package.mjs`.
 
 ## Load the extension (development)
 
