@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "webpify",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Converts images to WebP right before you upload them, on sites you choose.",
   "icons": {
     "16": "icons/icon-16.png",
