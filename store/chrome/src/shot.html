@@ -1,0 +1,241 @@
+<!doctype html>
+<!-- One 1280×800 store screenshot: a caption and a browser window showing a page. render.mjs
+     opens it as shot.html?shot=1, 2 or 3. -->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>webpify screenshot</title>
+    <link rel="stylesheet" href="/extension/styles/tokens.css" />
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        width: 1280px;
+        height: 800px;
+        margin: 0;
+        overflow: hidden;
+      }
+      body {
+        position: relative;
+        background:
+          radial-gradient(900px 420px at 100% 0%, rgba(255, 161, 115, 0.22), transparent 70%),
+          var(--ink);
+        color: var(--paper);
+        font-family: var(--font);
+        -webkit-font-smoothing: antialiased;
+      }
+      .caption {
+        position: absolute;
+        top: 46px;
+        left: 72px;
+        right: 72px;
+      }
+      h1 {
+        margin: 0;
+        font-size: 40px;
+        line-height: 1.15;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+      }
+      h1 em {
+        background: var(--gold);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        font-style: normal;
+      }
+      .caption p {
+        max-width: 780px;
+        margin: 10px 0 0;
+        color: rgba(253, 252, 252, 0.72);
+        font-size: 18px;
+        line-height: 1.45;
+      }
+      .window {
+        position: absolute;
+        top: 186px;
+        left: 72px;
+        right: 72px;
+        bottom: -14px;
+        overflow: hidden;
+        border-radius: 12px 12px 0 0;
+        background: #fff;
+        box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.6);
+      }
+      .bar {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        height: 46px;
+        padding: 0 12px 0 18px;
+        background: #ebeaf0;
+        color: #4a4d57;
+        font: 13px/1 system-ui, sans-serif;
+      }
+      .dots {
+        display: flex;
+        gap: 8px;
+      }
+      .dots i {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #ff5f57;
+      }
+      .dots i:nth-child(2) {
+        background: #febc2e;
+      }
+      .dots i:nth-child(3) {
+        background: #28c840;
+      }
+      .url {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex: 1;
+        height: 30px;
+        padding: 0 14px;
+        border-radius: 999px;
+        background: #fff;
+      }
+      .url svg,
+      .tool svg {
+        width: 15px;
+        height: 15px;
+        flex: none;
+      }
+      .tool {
+        display: grid;
+        place-items: center;
+        width: 32px;
+        height: 30px;
+        border-radius: 8px;
+      }
+      .tool img {
+        width: 18px;
+        height: 18px;
+      }
+      .tool.is-open {
+        background: #d6d4de;
+      }
+      .page {
+        display: block;
+        width: 100%;
+        height: calc(100% - 46px);
+        border: 0;
+      }
+      .popup {
+        position: absolute;
+        top: 50px;
+        right: 10px;
+        width: 360px;
+        height: 300px;
+        overflow: hidden;
+        border: 0;
+        border-radius: 10px;
+        background: #fff;
+        box-shadow: 0 14px 40px -6px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(0, 0, 0, 0.06);
+      }
+    </style>
+  </head>
+  <body>
+    <header class="caption">
+      <h1></h1>
+      <p></p>
+    </header>
+    <div class="window">
+      <div class="bar">
+        <span class="dots"><i></i><i></i><i></i></span>
+        <span class="url">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+            <rect x="3.5" y="7" width="9" height="6.5" rx="1.5" />
+            <path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" />
+          </svg>
+          <span id="url"></span>
+        </span>
+        <span class="tool" title="Extensions">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" aria-hidden="true">
+            <path d="M6 2.5h2.5v1.5a1.25 1.25 0 0 0 2.5 0V2.5h2.5V6h-1.5a1.25 1.25 0 0 0 0 2.5h1.5v5H10V12a1.25 1.25 0 0 0-2.5 0v1.5H2.5V8.5H4a1.25 1.25 0 0 0 0-2.5H2.5v-3.5z" />
+          </svg>
+        </span>
+        <span class="tool" id="webpify-tool"><img src="/extension/icons/icon-32.png" alt="webpify" /></span>
+      </div>
+      <iframe class="page" id="page" title="page"></iframe>
+    </div>
+    <script>
+      const SHOTS = {
+        1: {
+          title: "Smaller images, <em>before</em> they upload",
+          text: "Pick or drop photos as you always do. webpify converts them to WebP on your computer, and the site receives the smaller files.",
+          url: "cms.example.com/media",
+          page: "cms.html",
+        },
+        2: {
+          title: "On only where you <em>choose</em>",
+          text: "Turn webpify on for the site you're on with one switch. Your browser asks for access to that site, and only that site.",
+          url: "cms.example.com/media",
+          page: "cms.html",
+          popup: true,
+        },
+        3: {
+          title: "Your quality, your <em>size</em>",
+          text: "Choose the quality and the largest width and height. Screenshots and logos stay sharp, and the original is kept whenever WebP isn't smaller.",
+          url: "webpify settings",
+          page: "/extension/options.html",
+          scrollTo: "#conversion-heading",
+        },
+      };
+      const shot = SHOTS[new URLSearchParams(location.search).get("shot")] ?? SHOTS[1];
+      document.querySelector("h1").innerHTML = shot.title;
+      document.querySelector(".caption p").textContent = shot.text;
+      document.getElementById("url").textContent = shot.url;
+
+      const page = document.getElementById("page");
+      const loaded = (frame) => new Promise((resolve) => frame.addEventListener("load", resolve, { once: true }));
+      const pageLoaded = loaded(page);
+      page.src = shot.page;
+
+      let popupLoaded = Promise.resolve();
+      if (shot.popup) {
+        document.getElementById("webpify-tool").classList.add("is-open");
+        const popup = document.createElement("iframe");
+        popup.className = "popup";
+        popup.title = "webpify popup";
+        document.querySelector(".window").append(popup);
+        popupLoaded = loaded(popup).then(async () => {
+          await new Promise((resolve) => setTimeout(resolve, 300)); // popup.js renders after async reads
+          popup.style.height = `${popup.contentDocument.documentElement.scrollHeight}px`;
+        });
+        popup.src = "/extension/popup.html";
+      }
+
+      /** Called by render.mjs once the page is loaded. */
+      window.pageReady = Promise.all([pageLoaded, popupLoaded]).then(async () => {
+        await document.fonts.ready;
+        if (shot.scrollTo) {
+          // Scroll once options.js has listed the sites: rows added above later would move it.
+          while (!page.contentDocument.querySelector("#sites li")) await new Promise((resolve) => setTimeout(resolve, 50));
+          await new Promise((resolve) => setTimeout(resolve, 200));
+          const target = page.contentDocument.querySelector(shot.scrollTo).closest("section");
+          target.style.borderTopColor = "transparent"; // the divider would sit alone at the top
+          page.contentWindow.scrollTo(0, target.getBoundingClientRect().top);
+        }
+      });
+
+      /** Resolves when the page lists `count` uploads with their previews loaded. */
+      window.uploadsShown = async (count) => {
+        const doc = page.contentDocument;
+        for (;;) {
+          const images = [...doc.querySelectorAll("#uploads img")];
+          if (images.length === count && images.every((img) => img.complete && img.naturalWidth > 0)) {
+            const metas = [...doc.querySelectorAll("#uploads small")];
+            if (metas.every((meta) => meta.textContent)) return images.map((img) => img.closest("figure").textContent);
+          }
+          await new Promise((resolve) => setTimeout(resolve, 50));
+        }
+      };
+    </script>
+  </body>
+</html>

@@ -1,0 +1,51 @@
+<!doctype html>
+<!-- The 440×280 small promo tile. Google asks for no text, saturated colours and a filled
+     tile, so it's the webpify mark (assets/mark.svg) on bid ink with the gold around it. -->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>webpify promo tile</title>
+    <link rel="stylesheet" href="/extension/styles/tokens.css" />
+    <style>
+      html,
+      body {
+        width: 440px;
+        height: 280px;
+        margin: 0;
+        overflow: hidden;
+      }
+      body {
+        background:
+          radial-gradient(260px 200px at 50% 52%, rgba(255, 161, 115, 0.38), transparent 70%),
+          linear-gradient(135deg, #2a2840 0%, var(--ink) 60%);
+      }
+      svg {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <svg width="440" height="280" viewBox="0 0 440 280" aria-hidden="true">
+      <defs>
+        <linearGradient id="gold" x1="0" y1="1" x2="1" y2="0">
+          <stop offset="0" stop-color="#b27050" />
+          <stop offset="0.5" stop-color="#ffa173" />
+          <stop offset="1" stop-color="#ffba90" />
+        </linearGradient>
+      </defs>
+      <!-- Frames shrinking towards the mark: big images made small. -->
+      <g fill="none" stroke="#ffa173" stroke-width="2">
+        <rect x="40" y="-30" width="360" height="340" rx="64" opacity="0.10" />
+        <rect x="80" y="10" width="280" height="260" rx="52" opacity="0.18" />
+        <rect x="118" y="46" width="204" height="188" rx="42" opacity="0.30" />
+      </g>
+      <rect x="150" y="70" width="140" height="140" rx="34" fill="#1d1c2c" stroke="url(#gold)" stroke-width="2.5" />
+      <g transform="translate(170 90) scale(5)" fill="none" stroke="url(#gold)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M10.25 4.75H5.25a2.5 2.5 0 0 0-2.5 2.5v7.5a2.5 2.5 0 0 0 2.5 2.5h7.5a2.5 2.5 0 0 0 2.5-2.5V2.25" />
+        <path d="M12.5 5l2.75-2.75L18 5" />
+        <path d="M5.5 14.25l3.25-3.5 3.25 3.5" />
+        <circle cx="11.75" cy="8.25" r="1.25" fill="#ffa173" stroke="none" />
+      </g>
+    </svg>
+  </body>
+</html>

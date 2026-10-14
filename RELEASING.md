@@ -2,7 +2,7 @@
 
 webpify is shared internally through **GitHub Releases**. The [Release workflow](.github/workflows/release.yml) builds and tests everything and attaches the packages to a release. Colleagues install them by following [INSTALL.md](INSTALL.md).
 
-Publishing to the Chrome Web Store and Mozilla's add-ons site comes later; the steps are in [docs/public-release.md](docs/public-release.md).
+Publishing to the Chrome Web Store and Mozilla's add-ons site is described in [docs/public-release.md](docs/public-release.md).
 
 ## What a release contains
 
@@ -30,6 +30,7 @@ Publishing to the Chrome Web Store and Mozilla's add-ons site comes later; the s
    - packages Chrome, Firefox and the source code
    - signs the Firefox package, if Mozilla signing is set up
    - creates the release with notes that tell people which file to download
+   - submits the Chrome package to the Chrome Web Store, once that is set up (docs/public-release.md)
 4. **Tell the team.** Share the release link. People who already have webpify follow the "Updating" section of INSTALL.md (people with the signed Firefox file get the update automatically).
 
 **Trying a build without releasing:** on the **Actions** tab, open **Release**, click **Run workflow**, and download the packages from the run's **Artifacts** section. Nothing is published and nothing is signed.

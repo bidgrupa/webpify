@@ -1,0 +1,209 @@
+<!doctype html>
+<!-- A made-up site's upload page for the store screenshots. Its own script only lists the files
+     its input hands it; webpify's content script is what turns them into WebP. -->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Media library</title>
+    <script src="stub.js"></script>
+    <script src="/extension/shared.js"></script>
+    <script src="/extension/content.js"></script>
+    <script type="module" src="/extension/background.js"></script>
+    <style>
+      :root {
+        --bg: #f6f7f9;
+        --fg: #1f2933;
+        --muted: #66717d;
+        --line: #e1e5ea;
+        --accent: #0f766e;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--fg);
+        font: 14px/1.45 "Fira Sans", system-ui, sans-serif;
+      }
+      .top {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        height: 52px;
+        padding: 0 20px;
+        background: #fff;
+        border-bottom: 1px solid var(--line);
+        font-weight: 600;
+      }
+      .logo {
+        display: grid;
+        place-items: center;
+        width: 26px;
+        height: 26px;
+        border-radius: 7px;
+        background: var(--accent);
+        color: #fff;
+        font-size: 13px;
+      }
+      .avatar {
+        display: grid;
+        place-items: center;
+        width: 30px;
+        height: 30px;
+        margin-left: auto;
+        border-radius: 50%;
+        background: #dbe7e5;
+        color: var(--accent);
+        font-size: 12px;
+      }
+      .layout {
+        display: grid;
+        grid-template-columns: 196px 1fr;
+      }
+      nav {
+        display: grid;
+        align-content: start;
+        gap: 2px;
+        min-height: calc(100vh - 52px);
+        padding: 18px 12px;
+        background: #fff;
+        border-right: 1px solid var(--line);
+      }
+      nav span {
+        padding: 7px 12px;
+        border-radius: 8px;
+        color: var(--muted);
+      }
+      nav .is-current {
+        background: #e6f2f0;
+        color: var(--accent);
+        font-weight: 600;
+      }
+      main {
+        padding: 24px 28px;
+      }
+      h1 {
+        margin: 0;
+        font-size: 22px;
+      }
+      .lead {
+        margin: 2px 0 18px;
+        color: var(--muted);
+      }
+      .drop {
+        position: relative;
+        display: grid;
+        place-items: center;
+        align-content: center;
+        gap: 2px;
+        height: 92px;
+        border: 2px dashed #c3cbd4;
+        border-radius: 12px;
+        background: #fff;
+        color: var(--muted);
+        text-align: center;
+      }
+      .drop strong {
+        color: var(--fg);
+        font-weight: 500;
+      }
+      .drop u {
+        color: var(--accent);
+      }
+      .drop input {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+      }
+      h2 {
+        margin: 22px 0 10px;
+        font-size: 13px;
+        color: var(--muted);
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+      }
+      .card {
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: #fff;
+      }
+      .card img {
+        display: block;
+        width: 100%;
+        aspect-ratio: 4 / 3;
+        object-fit: cover;
+        background: #e9edf1;
+      }
+      .card p {
+        margin: 0;
+        padding: 8px 10px 0;
+        font-weight: 500;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .card small {
+        display: block;
+        padding: 0 10px 9px;
+        color: var(--muted);
+      }
+    </style>
+  </head>
+  <body>
+    <header class="top">
+      <span class="logo">E</span>
+      Example CMS
+      <span class="avatar">AK</span>
+    </header>
+    <div class="layout">
+      <nav>
+        <span>Dashboard</span>
+        <span>Pages</span>
+        <span>Posts</span>
+        <span class="is-current">Media</span>
+        <span>Settings</span>
+      </nav>
+      <main>
+        <h1>Media library</h1>
+        <p class="lead">Images for your pages and posts.</p>
+        <label class="drop">
+          <span><strong>Drop images here</strong> or <u>choose files</u></span>
+          <span>JPEG, PNG or WebP</span>
+          <input type="file" accept="image/*" multiple />
+        </label>
+        <h2>Just uploaded</h2>
+        <div class="grid" id="uploads"></div>
+      </main>
+    </div>
+    <script>
+      const kinds = { "image/webp": "WebP", "image/jpeg": "JPEG", "image/png": "PNG" };
+      const size = (bytes) => (bytes >= 1e6 ? `${(bytes / 1e6).toFixed(1)} MB` : `${Math.round(bytes / 1e3)} KB`);
+      document.querySelector(".drop input").addEventListener("change", (event) => {
+        const cards = [...event.target.files].map((file) => {
+          const card = document.createElement("figure");
+          card.className = "card";
+          card.style.margin = "0";
+          const img = new Image();
+          const meta = document.createElement("small");
+          img.onload = () => {
+            meta.textContent = `${kinds[file.type] ?? file.type} · ${img.naturalWidth} × ${img.naturalHeight} · ${size(file.size)}`;
+          };
+          img.src = URL.createObjectURL(file);
+          const name = document.createElement("p");
+          name.textContent = file.name;
+          card.append(img, name, meta);
+          return card;
+        });
+        document.getElementById("uploads").replaceChildren(...cards);
+      });
+    </script>
+  </body>
+</html>

@@ -79,6 +79,9 @@ function packChrome() {
   const m = structuredClone(manifest);
   delete m.browser_specific_settings;
   delete m.background.scripts;
+  // Files only cross messaging from Chrome 148 ("message_serialization"); older versions would
+  // install it and silently convert nothing. The Chrome Web Store doesn't offer it to them.
+  m.minimum_chrome_version = "148";
   const stage = stageExtension("chrome", m);
   const zip = zipFolder(stage, join(dist, `webpify-chrome-${version}.zip`));
   rmSync(stage, { recursive: true, force: true });

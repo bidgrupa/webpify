@@ -6,6 +6,8 @@ name: Release
 #     without publishing anything, which is handy for testing.
 # Mozilla signing is optional: with the AMO_JWT_ISSUER and AMO_JWT_SECRET repository secrets
 # set, tagged releases also get a signed .xpi that regular Firefox installs. See RELEASING.md.
+# Chrome Web Store: with the CWS_SERVICE_ACCOUNT secret and the CWS_PUBLISHER_ID and CWS_ITEM_ID
+# variables set, tagged releases are also submitted there. See docs/public-release.md.
 
 on:
   push:
@@ -210,3 +212,29 @@ jobs:
             gh release create "$GITHUB_REF_NAME" dist/* --repo "$GITHUB_REPOSITORY" --verify-tag \
               --title "webpify $VERSION" --notes-file notes.md
           fi
+
+  chrome-web-store:
+    name: Submit to the Chrome Web Store
+    # Skipped until the store is set up (docs/public-release.md); the first version goes in by hand.
+    if: github.ref_type == 'tag' && vars.CWS_ITEM_ID != ''
+    needs: release
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: chrome
+          path: dist
+
+      - name: Upload and submit for review
+        env:
+          CWS_SERVICE_ACCOUNT: ${{ secrets.CWS_SERVICE_ACCOUNT }}
+          CWS_PUBLISHER_ID: ${{ vars.CWS_PUBLISHER_ID }}
+          CWS_ITEM_ID: ${{ vars.CWS_ITEM_ID }}
+          CWS_PUBLISH_TYPE: ${{ vars.CWS_PUBLISH_TYPE }}
+        run: node scripts/chrome-web-store.mjs dist/webpify-chrome-*.zip

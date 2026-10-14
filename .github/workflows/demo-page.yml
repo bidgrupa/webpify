@@ -1,0 +1,40 @@
+name: Demo page
+
+# Publishes demo/ to GitHub Pages (https://bidgrupa.github.io/webpify/), a public page where
+# store reviewers and anyone else can try webpify. Turn it on once: Settings → Pages →
+# Build and deployment → Source: GitHub Actions. It redeploys when demo/ changes.
+
+on:
+  push:
+    branches: [main]
+    paths: ["demo/**", ".github/workflows/demo-page.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: demo-page
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: Publish demo/
+    runs-on: ubuntu-24.04
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/configure-pages@v6
+
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: demo
+
+      - id: deployment
+        uses: actions/deploy-pages@v5

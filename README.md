@@ -58,6 +58,7 @@ node --experimental-wasm-exnref tests/wasm-smoke.mjs path/to/photo.jpg   # the b
 node --experimental-wasm-exnref tests/background-test.mjs                 # popup flows in background.js, faked browser APIs
 ./release.sh        # all release packages in dist/ (what the GitHub workflow publishes)
 scripts/render-icons.sh   # re-render extension/icons/ from assets/*.svg (needs Inkscape)
+node store/chrome/src/render.mjs   # re-render the Chrome Web Store screenshots and promo tile (after ./build.sh)
 ```
 
 ### Building from source (for add-on reviewers)
