@@ -65,7 +65,7 @@ node store/chrome/src/render.mjs   # re-render the Chrome Web Store screenshots 
 
 The build is reproducible: the same commit gives a byte-identical `extension/pkg/webpify_bg.wasm` and `webpify.js`. The pinned toolchain plus `--remap-path-prefix` in `build.sh` keep machine-specific paths out of the binary.
 
-**Build environment:** Ubuntu 24.04 on x86_64, the reference (GitHub's `ubuntu-24.04` runner builds the releases). The release workflow also builds on ARM64 Ubuntu 24.04 and checks that the output is identical.
+**Build environment:** Ubuntu 24.04 on **x86_64**, like GitHub's `ubuntu-24.04` runner that builds the releases. Use x86_64. An ARM64 machine builds a `.wasm` that works the same but isn't byte-identical, because Cargo's hash of each crate includes its proc macros, which are compiled for the build machine, and those hashes decide the order of functions in the `.wasm`.
 
 1. Install a C toolchain, curl and zip: `sudo apt install build-essential curl zip`.
 2. Install rustup (<https://rustup.rs>): `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y`, then `. "$HOME/.cargo/env"`.

@@ -29,7 +29,6 @@ Publishing to the Chrome Web Store and Mozilla's add-ons site is described in [d
    - submits the Firefox package to addons.mozilla.org, once that is set up (below)
    - creates the release with notes that tell people which file to download
    - submits the Chrome package to the Chrome Web Store, once that is set up (docs/public-release.md)
-   - checks that an ARM64 build gives the same `.wasm` as the x86_64 one, as Mozilla's reviewers need
 4. **Tell the team.** Share the release link. People who installed webpify from a store get the update automatically once the store approves it; everyone else follows the "Updating" section of INSTALL.md.
 
 **Trying a build without releasing:** on the **Actions** tab, open **Release**, click **Run workflow**, and download the packages from the run's **Artifacts** section. Nothing is published and nothing is signed.
@@ -48,5 +47,5 @@ webpify is listed on addons.mozilla.org (AMO). The first version was submitted b
 
 Things to know:
 - **Each version number can be submitted only once.** If a release needs fixing, bump the version and tag again. That's also why manual workflow runs never submit.
-- **Mozilla may review a version by hand.** Reviewers rebuild from the source zip, following the approval notes and the "Building from source" section in the README. The arm64 job checks the build their default ARM64 machine makes.
+- **Mozilla may review a version by hand.** Reviewers rebuild from the source zip, following the approval notes and the "Building from source" section in the README. Those ask for x86_64, since an ARM64 build orders the `.wasm` differently.
 - **No `update_url`.** AMO refuses it on listed add-ons and handles updates itself, so the Firefox package has none.

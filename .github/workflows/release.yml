@@ -85,56 +85,6 @@ jobs:
           path: dist/webpify-source-*.zip
           if-no-files-found: error
 
-  arm64:
-    name: Check the build on ARM64
-    # Mozilla's reviewers rebuild the source on ARM64 Ubuntu 24.04 unless told otherwise, and
-    # their .wasm has to match ours byte for byte. This builds it there and compares.
-    needs: build
-    runs-on: ubuntu-24.04-arm
-    steps:
-      - uses: actions/checkout@v7
-
-      - name: Install rustup, zip and the pinned Rust toolchain
-        run: |
-          if ! command -v rustup > /dev/null; then
-            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain none
-            echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
-            export PATH="$HOME/.cargo/bin:$PATH"
-          fi
-          command -v zip > /dev/null || sudo apt-get install -y zip
-          channel=$(sed -n 's/^channel = "\(.*\)"/\1/p' rust-toolchain.toml)
-          rustup toolchain install "$channel" --profile minimal --target wasm32-unknown-unknown
-
-      - name: Restore the Rust cache
-        uses: actions/cache@v6
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            ~/.cargo/bin/wasm-bindgen
-            target
-          key: rust-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('rust-toolchain.toml', 'Cargo.lock') }}-wasm-bindgen-${{ env.WASM_BINDGEN_VERSION }}
-
-      - name: Install wasm-bindgen
-        run: |
-          if ! wasm-bindgen --version 2>/dev/null | grep -qF "$WASM_BINDGEN_VERSION"; then
-            cargo install wasm-bindgen-cli --version "$WASM_BINDGEN_VERSION" --locked
-          fi
-
-      - name: Build the WebAssembly module
-        run: ./build.sh
-
-      - uses: actions/download-artifact@v8
-        with:
-          name: wasm
-          path: x86_64
-
-      - name: Compare with the x86_64 build
-        run: |
-          cmp extension/pkg/webpify_bg.wasm x86_64/webpify_bg.wasm
-          cmp extension/pkg/webpify.js x86_64/webpify.js
-          echo "The ARM64 build is identical to the x86_64 one."
-
   chrome:
     name: Package for Chrome, Edge and Brave
     needs: build

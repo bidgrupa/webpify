@@ -94,7 +94,7 @@ Like the Chrome Web Store: the first version goes in by hand, then the release w
 
 From the next tag on, the workflow submits the version as listed, with the source zip, the release commit's message body as release notes, and [store/firefox/approval-notes.txt](../store/firefox/approval-notes.txt) for the reviewers. It doesn't wait for the review. Things to know:
 - **Each version number once.** AMO refuses a version number it has seen, even a rejected one. Fixing a release means a new version.
-- **Reviewers rebuild the source.** The approval notes and the README's "Building from source" give the steps, on x86_64 Ubuntu 24.04. The workflow's arm64 job checks that their default ARM64 machine gives the same `.wasm`.
+- **Reviewers rebuild the source.** The approval notes and the README's "Building from source" give the steps, on x86_64 Ubuntu 24.04. Their default machine is ARM64, which builds a `.wasm` that works the same but isn't byte-identical, so both say to use x86_64.
 
 ## Reproducible build
 
@@ -104,4 +104,4 @@ Mozilla's reviewers must get byte-identical output from the source zip. This is 
 - `build.sh` maps local paths away with `--remap-path-prefix`.
 - The wasm-bindgen CLI is pinned to 0.2.129.
 
-Checked for v0.3.1: the `.wasm` in the GitHub release is byte-identical to a local build, and rebuilding from the release's source zip in a fresh folder (build.sh, then package.mjs) gives a Firefox package identical to the one submitted to AMO. Only on x86_64 so far; the release workflow's arm64 job covers ARM64. The reviewer steps are in the README under "Building from source".
+Checked for v0.3.1: the `.wasm` in the GitHub release is byte-identical to a local build, and rebuilding from the release's source zip in a fresh folder (build.sh, then package.mjs) gives a Firefox package identical to the one submitted to AMO. ARM64 doesn't reproduce it: Cargo's hash of each crate includes its proc macros, which are built for the build machine, and those hashes decide the order of functions in the `.wasm`. Changing only how the proc macros are built changes the `.wasm` at the same byte as the ARM64 build did, and stable Cargo has no setting to avoid it, so x86_64 is required. The reviewer steps are in the README under "Building from source".
