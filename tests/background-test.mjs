@@ -1,7 +1,9 @@
-// Checks the background's toolbar-popup flows (turning a site on, pausing) against faked
-// browser APIs, without a browser:
+// Checks the background's toolbar-popup flows (turning a site on, pausing) and conversion, over
+// structured-clone and Safari's JSON messaging, against faked browser APIs, without a browser:
 //   ./build.sh && node --experimental-wasm-exnref tests/background-test.mjs
 // (background.js imports the built WASM glue, so build first.)
+import { readFileSync } from "node:fs";
+
 const ext = new URL("../extension", import.meta.url).pathname;
 const log = [];
 const listeners = {};
@@ -73,4 +75,26 @@ check(`alarm ends the pause (${log.join("; ")})`, log.includes('badge ""') && lo
 
 // 4. Other messages are left alone.
 check("unknown messages aren't answered", (await send({ type: "something-else" })) === "not handled");
+
+// 5. Conversion. Node's fetch can't read file: URLs, so hand the glue the .wasm directly.
+const realFetch = globalThis.fetch;
+globalThis.fetch = async (url) =>
+  String(url).startsWith("file:")
+    ? new Response(readFileSync(new URL(url)), { headers: { "content-type": "application/wasm" } })
+    : realFetch(url);
+const png = Uint8Array.fromBase64( // 2×2 RGB PNG
+  "iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAEklEQVR4nGP4z8DAAMIM/4EAAB/uBfsL2WiLAAAAAElFTkSuQmCC",
+);
+const options = { quality: 80, maxDimension: 2560, lossless: false, sharpGraphics: true };
+const isWebp = (bytes) => new TextDecoder().decode(bytes.subarray(8, 12)) === "WEBP";
+const cloned = await send({ type: "convert", file: new File([png], "a.png", { type: "image/png" }), options });
+check(`a File comes back as WebP bytes (${cloned.error ?? "ok"})`, cloned.ok && isWebp(cloned.bytes));
+
+// 6. Safari sends messages as JSON: the File arrives as {}, so the bytes go as base64.
+const json = (value) => JSON.parse(JSON.stringify(value));
+const asJson = async (message) => json(await send(json(message)));
+const refused = await asJson({ type: "convert", file: new File([png], "a.png", { type: "image/png" }), options });
+check("a File that arrives as {} asks for base64", refused.sendAsText === true && !refused.ok);
+const text = await asJson({ type: "convert", base64: png.toBase64(), options });
+check(`base64 in, WebP as base64 out (${text.error ?? "ok"})`, text.ok && isWebp(Uint8Array.fromBase64(text.base64)));
 process.exit(failures ? 1 : 0);

@@ -19,15 +19,17 @@ function loadWasm() {
   return wasmReady;
 }
 
-async function convert(file, options) {
-  // Chrome only clones a File across messaging with "message_serialization": "structured_clone".
-  if (!(file instanceof Blob)) {
-    throw new Error("the file did not arrive (structured-clone messaging unavailable?)");
-  }
+// Firefox, and Chrome with "message_serialization": "structured_clone", pass the File itself and
+// take the WebP back as a Uint8Array. Safari sends messages as JSON, which turns both into {}, so
+// there the bytes travel as base64 text: a File that arrives as {} asks content.js to switch.
+async function convert({ file, base64, options }) {
+  const asText = typeof base64 === "string";
+  if (!asText && !(file instanceof Blob)) return { ok: false, sendAsText: true };
   await loadWasm();
-  const input = new Uint8Array(await file.arrayBuffer());
+  const input = asText ? Uint8Array.fromBase64(base64) : new Uint8Array(await file.arrayBuffer());
   ensureReady(); // rebuilds the instance if an earlier call panicked
-  return convertToWebp(input, options.quality, options.maxDimension, options.lossless, options.sharpGraphics !== false);
+  const bytes = convertToWebp(input, options.quality, options.maxDimension, options.lossless, options.sharpGraphics !== false);
+  return asText ? { ok: true, base64: bytes.toBase64() } : { ok: true, bytes };
 }
 
 // --- Styles for the on-page notice -------------------------------------------
@@ -84,7 +86,7 @@ async function finishPendingSite() {
 api.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   const work =
     message?.type === "convert"
-      ? convert(message.file, message.options).then((bytes) => ({ ok: true, bytes }))
+      ? convert(message)
       : message?.type === "ui-css"
         ? loadUiCss().then((css) => ({ ok: true, css }))
         : message?.type === "enable-site"

@@ -236,6 +236,10 @@
     return { files: results, stats };
   }
 
+  // Safari sends messages as JSON, so a File can't go through as it is. The background says so
+  // on the first file, and from then on the bytes go both ways as base64 text.
+  let sendAsText = false;
+
   async function convertFile(file) {
     const options = {
       quality: settings.quality,
@@ -243,17 +247,25 @@
       lossless: settings.lossless,
       sharpGraphics: settings.sharpGraphics,
     };
-    const response = await withTimeout(
-      api.runtime.sendMessage({ type: "convert", file, options }),
-      CONVERT_TIMEOUT_MS,
-    );
+    let response = await requestConversion(file, options);
+    if (response?.sendAsText && !sendAsText) {
+      sendAsText = true;
+      response = await requestConversion(file, options);
+    }
     if (!response?.ok) throw new Error(response?.error ?? "no response from the background");
-    const { bytes } = response;
+    const bytes = sendAsText ? Uint8Array.fromBase64(response.base64) : response.bytes;
     if (!ArrayBuffer.isView(bytes) && !(bytes instanceof ArrayBuffer)) {
-      throw new Error("no bytes came back (structured-clone messaging unavailable?)");
+      throw new Error("no bytes came back from the background");
     }
     const name = `${file.name.replace(/\.[^.]*$/, "")}.webp`;
     return new File([bytes], name, { type: "image/webp", lastModified: file.lastModified });
+  }
+
+  async function requestConversion(file, options) {
+    const message = sendAsText
+      ? { type: "convert", base64: new Uint8Array(await file.arrayBuffer()).toBase64(), options }
+      : { type: "convert", file, options };
+    return withTimeout(api.runtime.sendMessage(message), CONVERT_TIMEOUT_MS);
   }
 
   function withTimeout(promise, ms) {

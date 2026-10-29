@@ -1,6 +1,6 @@
 # webpify
 
-Browser extension (Chrome, Edge, Firefox, Zen; Manifest V3) that converts images to WebP **right before you upload them**. On sites you choose, images picked in a matching `<input type="file">`, or dropped onto a matching drop zone such as [Dropzone.js](https://www.dropzone.dev/), are converted. The page's own upload code receives the `.webp` files as if you had picked them.
+Browser extension (Chrome, Edge, Firefox, Zen, Safari; Manifest V3) that converts images to WebP **right before you upload them**. On sites you choose, images picked in a matching `<input type="file">`, or dropped onto a matching drop zone such as [Dropzone.js](https://www.dropzone.dev/), are converted. The page's own upload code receives the `.webp` files as if you had picked them.
 
 The image work is Rust compiled to WebAssembly: decode (JPEG/PNG/BMP) → EXIF orientation → optional downscale → WebP via [zenwebp](https://crates.io/crates/zenwebp), a pure-Rust encoder. The decode/orient/resize code is adapted from sharpR. Images never leave the browser.
 
@@ -18,11 +18,11 @@ Releases are built by GitHub Actions when a version tag is pushed; see [RELEASIN
 page ── content.js (isolated world, document_start)
           window capture listeners on `input` + `change`
           matching file input → hold both events → send each File to the background
-              │ runtime.sendMessage (structured clone)
+              │ runtime.sendMessage (structured clone; Safari: JSON, so base64 text)
               ▼
-        background.js (Chrome service worker / Firefox event page)
+        background.js (Chrome service worker / Firefox event page / Safari background page)
           Rust/WASM convertToWebp()
-              │ Uint8Array
+              │ Uint8Array (Safari: base64 text)
               ▼
         content.js: DataTransfer → input.files, re-fire input + change
           → the page's handlers (plain JS, React, web components) see WebP files
@@ -57,6 +57,7 @@ cargo test          # native unit tests of the Rust pipeline
 node --experimental-wasm-exnref tests/wasm-smoke.mjs path/to/photo.jpg   # the built .wasm, in Node
 node --experimental-wasm-exnref tests/background-test.mjs                 # popup flows in background.js, faked browser APIs
 ./release.sh        # all release packages in dist/ (what the GitHub workflow publishes)
+node scripts/package.mjs safari   # dist/safari/ only, to load in Safari (after ./build.sh)
 scripts/render-icons.sh   # re-render extension/icons/ from assets/*.svg (needs Inkscape)
 node store/chrome/src/render.mjs   # re-render the Chrome Web Store screenshots and promo tile (after ./build.sh)
 ```
@@ -88,6 +89,8 @@ flatpak override --user --filesystem="$PWD/extension:ro" org.mozilla.firefox
 - **Firefox / Zen:** `about:debugging#/runtime/this-firefox` → *Load Temporary Add-on…* → select `dist/webpify.zip`, which `build.sh` writes. It stays loaded until the browser restarts.
   - Don't pick `extension/manifest.json` in a flatpak browser. The file picker shares only that one file, so the rest of the extension is missing and the options page comes up blank.
   - After a rebuild, click *Reload* in `about:debugging`.
+- **Safari (26 or later):** run `node scripts/package.mjs safari` after `./build.sh`. In Safari → Settings → Advanced, tick *Show features for web developers*. Then Settings → Developer → allow unsigned extensions → *Add Temporary Extension…* → select `dist/safari/`, and turn webpify on under Settings → Extensions. It stays loaded until Safari quits.
+  - After a rebuild, package again and add the folder again.
 
 Click the toolbar icon to open the options page.
 
@@ -106,7 +109,7 @@ python3 -m http.server 8000 --directory demo
 
    A notice at the bottom of the page shows progress and savings.
 
-Debugging: the background console is under *Inspect views: service worker* in Chrome, or *Inspect* in Firefox's about:debugging. The content script logs to the page console with a `[webpify]` prefix.
+Debugging: the background console is under *Inspect views: service worker* in Chrome, *Inspect* in Firefox's about:debugging, or Develop → *Web Extension Background Content* in Safari. The content script logs to the page console with a `[webpify]` prefix.
 
 ## Not covered
 
@@ -114,7 +117,7 @@ Debugging: the background console is under *Inspect views: service worker* in Ch
 - Folder drops. These pass through unchanged.
 - Drop libraries other than Dropzone.js are untested. Ones that read `dataTransfer.files`, or `items` with `getAsFile()`, should work.
 - WebP limits on drop zones. Unlike an input's `accept`, a drop zone's file-type limit (for example Dropzone's `acceptedFiles`) isn't visible to the extension. The one exception is Dropzone's hidden input, whose `accept` is used as a hint.
-- Safari.
+- Installing in Safari for everyday use. Safari only installs extensions that come inside a signed Mac app, which isn't built yet; for now webpify loads as a temporary extension.
 - `wasm-opt` size optimisation.
 - Animated images. GIFs pass through untouched.
 
