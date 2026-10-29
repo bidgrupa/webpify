@@ -156,7 +156,7 @@ addForm.addEventListener("submit", (event) => {
 
 function badAddress(error) {
   console.warn("[webpify] page address rejected:", error);
-  setStatus("That page address doesn't work. Use the full address ending in /*, for example https://admin.lauris.io/*.", false);
+  setStatus("That page address doesn't work. Use the full address ending in /*, for example https://www.example.com/*.", false);
 }
 
 async function removeSite(pattern) {

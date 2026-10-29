@@ -32,14 +32,9 @@
         </div>
         <div class="group-body">
           <ul class="rows" id="sites"></ul>
-          <p class="empty" id="no-sites">No sites yet. Add one below, for example the Lauris CMS.</p>
+          <p class="empty" id="no-sites">No sites yet. Add one below.</p>
 
           <form id="add-site" class="add-site">
-            <div class="presets">
-              <span class="label">Lauris CMS</span>
-              <button type="button" class="btn btn--small" data-pattern="https://admin.lauris.io/*">admin.lauris.io</button>
-              <button type="button" class="btn btn--small" data-pattern="https://admin-stage.lauris.io/*">admin-stage.lauris.io</button>
-            </div>
             <div class="presets">
               <span class="label">Demo page</span>
               <button type="button" class="btn btn--small" data-pattern="http://localhost/*">localhost</button>
@@ -48,7 +43,7 @@
             <div class="field-row">
               <div class="field">
                 <label for="site-pattern">Page address</label>
-                <input id="site-pattern" name="pattern" type="text" required placeholder="https://admin.lauris.io/*" spellcheck="false" autocomplete="off" />
+                <input id="site-pattern" name="pattern" type="text" required placeholder="https://www.example.com/*" spellcheck="false" autocomplete="off" />
                 <p class="help">End it with /* to cover the whole site.</p>
               </div>
               <div class="field">

@@ -128,7 +128,7 @@ To turn it off for a site, click the icon there and turn the switch off.
 
 **Need one upload to stay exactly as it is?** Click the webpify icon and choose **Pause for 10 minutes**. The icon shows "off" while paused, and webpify turns itself back on afterwards.
 
-**Prefer the settings page?** Under **Sites**, next to **Lauris CMS**, click **admin.lauris.io**, then **Add site**, and allow access. For any other site, type its address in **Page address** with `/*` at the end (for example `https://www.example.com/*`).
+**Prefer the settings page?** Under **Sites**, type the site's address in **Page address** with `/*` at the end (for example `https://admin.lauris.io/*`), click **Add site**, and allow access.
 
 ### Settings worth knowing
 
