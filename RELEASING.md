@@ -2,7 +2,7 @@
 
 webpify is shared internally through **GitHub Releases**. The [Release workflow](.github/workflows/release.yml) builds and tests everything and attaches the packages to a release. Colleagues install them by following [INSTALL.md](INSTALL.md).
 
-Publishing to the Chrome Web Store and Mozilla's add-ons site is described in [docs/public-release.md](docs/public-release.md).
+Publishing to the Chrome Web Store, Mozilla's add-ons site and the Mac App Store is described in [docs/public-release.md](docs/public-release.md).
 
 ## What a release contains
 

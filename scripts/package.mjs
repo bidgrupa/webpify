@@ -1,15 +1,18 @@
 // Release packages, built from extension/ after build.sh. Run through release.sh or the
 // GitHub release workflow:
-//   node scripts/package.mjs [chrome] [firefox] [source]   (default: all three)
+//   node scripts/package.mjs [chrome] [firefox] [safari] [source]   (default: all four)
 //
 //   chrome   dist/webpify-chrome-<v>.zip              unzip and "Load unpacked" (Chrome, Edge,
 //                                                     Brave), or upload to the Chrome Web Store
 //   firefox  dist/firefox/                            folder for `web-ext sign` (addons.mozilla.org)
 //            dist/webpify-firefox-<v>-unsigned.xpi    the same, zipped: upload it to addons.mozilla.org,
 //                                                     or install it unsigned in Zen
+//   safari   dist/safari/                             folder for Safari's "Add Temporary Extension"
+//                                                     and `xcrun safari-web-extension-packager`
+//            dist/webpify-safari-<v>.zip              the same, zipped: App Store Connect's packager
 //   source   dist/webpify-source-<v>.zip              the AGPL source, and what Mozilla rebuilds
 //
-// extension/manifest.json serves both browsers during development; each package gets a
+// extension/manifest.json serves every browser during development; each package gets a
 // manifest with only its own browser's keys.
 import { execFileSync } from "node:child_process";
 import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -31,7 +34,7 @@ function run(command, args, cwd = root) {
 }
 
 const targets = process.argv.slice(2);
-const known = ["chrome", "firefox", "source"];
+const known = ["chrome", "firefox", "safari", "source"];
 for (const target of targets) if (!known.includes(target)) fail(`unknown target "${target}" (use ${known.join(", ")})`);
 const wanted = (target) => targets.length === 0 || targets.includes(target);
 
@@ -79,6 +82,20 @@ function packFirefox() {
   return [stage, zipFolder(stage, join(dist, `webpify-firefox-${version}-unsigned.xpi`))];
 }
 
+function packSafari() {
+  const m = structuredClone(manifest);
+  // background.scripts runs as a module background page, which, unlike Safari's service
+  // workers, can be inspected from the Develop menu.
+  delete m.background.service_worker;
+  // Safari messages are always JSON; content.js and background.js send the bytes as base64.
+  delete m.message_serialization;
+  // Safari 26 is the first that loads an unpacked folder ("Add Temporary Extension") and runs
+  // the WASM: exnref exceptions and 'wasm-unsafe-eval' in extension pages both work there.
+  m.browser_specific_settings = { safari: { strict_min_version: "26.0" } };
+  const stage = stageExtension("safari", m); // kept: Safari and the Xcode packager take a folder
+  return [stage, zipFolder(stage, join(dist, `webpify-safari-${version}.zip`))];
+}
+
 function packSource() {
   const zip = join(dist, `webpify-source-${version}.zip`);
   rmSync(zip, { force: true });
@@ -103,6 +120,7 @@ mkdirSync(dist, { recursive: true });
 const outputs = [
   ...(wanted("chrome") ? packChrome() : []),
   ...(wanted("firefox") ? packFirefox() : []),
+  ...(wanted("safari") ? packSafari() : []),
   ...(wanted("source") ? packSource() : []),
 ];
 
