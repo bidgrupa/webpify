@@ -91,7 +91,7 @@ The same images as on the Chrome Web Store; `node store/chrome/src/render.mjs` r
 
 | Version | Date | Changes | Status |
 |---|---|---|---|
-| 0.4.0 | 2026-10-29 | Settings page: the Lauris CMS shortcuts are gone; add a site by typing its address. | Not submitted |
+| 0.4.0 | 2026-10-29 | Settings page: the Lauris CMS shortcuts are gone; add a site by typing its address. | In review (submitted 2026-10-29) |
 | 0.3.1 | 2026-10-14 | First version on addons.mozilla.org. | In review (submitted 2026-10-14) |
 
 ## Review notes
