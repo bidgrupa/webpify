@@ -1,6 +1,8 @@
-// Checks the background's toolbar-popup flows (turning a site on, pausing) and conversion, over
+// Checks the background's toolbar-popup flows (turning a site on, pausing), the video converter's
+// injection and image conversion, over
 // structured-clone and Safari's JSON messaging, against faked browser APIs, without a browser:
-//   ./build.sh && node --experimental-wasm-exnref tests/background-test.mjs
+//   ./build.sh && node --js-base-64 --experimental-wasm-exnref tests/background-test.mjs
+// (--js-base-64: Node 24's V8 keeps Uint8Array.fromBase64 behind a flag; browsers have it.)
 // (background.js imports the built WASM glue, so build first.)
 import { readFileSync } from "node:fs";
 
@@ -24,7 +26,7 @@ globalThis.chrome = {
     onAdded: on("permissions.onAdded"), onRemoved: on("permissions.onRemoved"),
   },
   scripting: {
-    async executeScript(d) { log.push(`inject tab ${d.target.tabId}: ${d.files.join(",")}`); return []; },
+    async executeScript(d) { log.push(`inject tab ${d.target.tabId}${d.target.frameIds ? ` frame ${d.target.frameIds.join(",")}` : ""}: ${d.files.join(",")}`); return []; },
     async getRegisteredContentScripts() { return []; },
     async registerContentScripts(s) { log.push(`register ${s[0].matches.join(" ")}`); },
     async unregisterContentScripts() {},
@@ -37,8 +39,8 @@ globalThis.chrome = {
   },
 };
 await import(`${ext}/background.js`);
-const send = (message) => new Promise((resolve) => {
-  const handled = listeners["runtime.onMessage"][0](message, {}, resolve);
+const send = (message, sender = {}) => new Promise((resolve) => {
+  const handled = listeners["runtime.onMessage"][0](message, sender, resolve);
   if (!handled) resolve("not handled");
 });
 const settle = () => new Promise((r) => setTimeout(r, 50));
@@ -76,7 +78,14 @@ check(`alarm ends the pause (${log.join("; ")})`, log.includes('badge ""') && lo
 // 4. Other messages are left alone.
 check("unknown messages aren't answered", (await send({ type: "something-else" })) === "not handled");
 
-// 5. Conversion. Node's fetch can't read file: URLs, so hand the glue the .wasm directly.
+// 5. The video converter goes into the frame that asked for it.
+log.length = 0;
+const loaded = await send({ type: "load-video" }, { tab: { id: 3 }, frameId: 5 });
+check(`video converter injected into the asking frame (${log.join("; ")})`, loaded.ok === true && log.includes("inject tab 3 frame 5: vendor/mediabunny.js,video.js"));
+const refusedLoad = await send({ type: "load-video" }, {});
+check("a request from outside a tab is refused", refusedLoad.ok === false);
+
+// 6. Conversion. Node's fetch can't read file: URLs, so hand the glue the .wasm directly.
 const realFetch = globalThis.fetch;
 globalThis.fetch = async (url) =>
   String(url).startsWith("file:")
@@ -90,7 +99,7 @@ const isWebp = (bytes) => new TextDecoder().decode(bytes.subarray(8, 12)) === "W
 const cloned = await send({ type: "convert", file: new File([png], "a.png", { type: "image/png" }), options });
 check(`a File comes back as WebP bytes (${cloned.error ?? "ok"})`, cloned.ok && isWebp(cloned.bytes));
 
-// 6. Safari sends messages as JSON: the File arrives as {}, so the bytes go as base64.
+// 7. Safari sends messages as JSON: the File arrives as {}, so the bytes go as base64.
 const json = (value) => JSON.parse(JSON.stringify(value));
 const asJson = async (message) => json(await send(json(message)));
 const refused = await asJson({ type: "convert", file: new File([png], "a.png", { type: "image/png" }), options });

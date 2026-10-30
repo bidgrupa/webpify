@@ -6,6 +6,8 @@ The image work is Rust compiled to WebAssembly: decode (JPEG/PNG/BMP) → EXIF o
 
 The source's ICC colour profile is embedded in the WebP, so wide-gamut photos such as iPhone Display P3 keep their colours. All other metadata (EXIF, including GPS location, and XMP) is dropped.
 
+Videos picked the same way are converted to MP4 (H.264), at most 1080p and 30 fps, by the browser's own encoder through the WebCodecs API; [mediabunny](https://mediabunny.dev) (MPL-2.0, vendored unmodified in `extension/vendor/`) reads the file and writes the MP4. The sound is kept as it is whenever an MP4 can hold it (AAC, Opus), and the recording's metadata, location included, is dropped. A video that is already a compact H.264 MP4 is left alone; a MOV that is one is repackaged without re-encoding. One the browser can't read, such as an iPhone HEVC video in Firefox, is uploaded unchanged and the notice says why. Videos never leave the browser either. The design and the browser support matrix are in [docs/video-proposal.md](docs/video-proposal.md).
+
 ## Install
 
 webpify is shared internally for now: download it from the [latest release](../../releases/latest) and follow **[INSTALL.md](INSTALL.md)**, a step-by-step guide for Chrome, Edge, Brave, Zen and Firefox. See [PRIVACY.md](PRIVACY.md) for what the extension does with your images (in short: nothing leaves your device).
@@ -17,16 +19,23 @@ Releases are built by GitHub Actions when a version tag is pushed; see [RELEASIN
 ```
 page ── content.js (isolated world, document_start)
           window capture listeners on `input` + `change`
-          matching file input → hold both events → send each File to the background
-              │ runtime.sendMessage (structured clone; Safari: JSON, so base64 text)
-              ▼
-        background.js (Chrome service worker / Firefox event page / Safari background page)
-          Rust/WASM convertToWebp()
-              │ Uint8Array (Safari: base64 text)
+          matching file input → hold both events → convert each file, one at a time
+              │
+              ├─ image: runtime.sendMessage (structured clone; Safari: JSON, so base64 text)
+              │     ▼
+              │   background.js (Chrome service worker / Firefox event page / Safari background page)
+              │     Rust/WASM convertToWebp()
+              │     │ Uint8Array (Safari: base64 text)
+              │     ▼
+              └─ video: "load-video" → background injects vendor/mediabunny.js + video.js into
+                   this frame (once), then video.js converts here in the page:
+                   mediabunny reads the File → WebCodecs decode/encode (the browser's codecs) → MP4
               ▼
         content.js: DataTransfer → input.files, re-fire input + change
-          → the page's handlers (plain JS, React, web components) see WebP files
+          → the page's handlers (plain JS, React, web components) see WebP and MP4 files
 ```
+
+Videos are converted in the page rather than the background because WebCodecs isn't exposed to service workers (Chrome's background), and because Safari's extension messages are JSON, which can't carry a video. The page's own thread only shuffles packets; decoding and encoding run in the browser's media process, with hardware encoders where the machine has them.
 
 Drop zones work the same way. A `drop` on (or inside) an element matching the site's selector is held back, its files are converted, and a new `drop` event carrying the WebP files is dispatched at the same spot.
 
@@ -37,6 +46,7 @@ The default selector `input[type="file"], .dropzone` covers both Dropzone.js pat
 - Conversion runs in the extension's background, so the page stays responsive and the `.wasm` is never exposed to websites (no `web_accessible_resources`).
 - Inputs whose `accept` rules out WebP (for example `image/jpeg,image/png`) are left alone. GIF, WebP, SVG and other files pass through unchanged.
 - If a conversion fails, times out, or comes out larger than the original, the original file is kept. The page always gets its events.
+- A video conversion shows its progress and a Cancel link in the notice. It is given up when it makes no progress for three minutes, and dropped when a new selection replaces it.
 - Sites are turned on from the toolbar popup ("Convert uploads on this site", which also starts it on the open tab) or added on the options page. The extension asks for access to each one and registers its content script there at runtime. Firefox closes the popup while the permission prompt is open, so the background finishes turning a site on.
 - The popup can pause conversion everywhere for 10 minutes; the icon shows "off" until an alarm ends the pause.
 - Screenshots, logos and other graphics: a PNG or BMP with few colours (up to 32,768) is also encoded lossless, and keeps that when it's at most 1.5× the lossy size. Measured on samples: a UI screenshot came out 9× smaller lossless, a logo 1.3× larger, a photo saved as PNG 7.8× larger (so it stays lossy).
@@ -55,7 +65,11 @@ The CLI version must match the `wasm-bindgen` version pinned in `Cargo.toml`. `r
 ./build.sh          # → extension/pkg/webpify.js + webpify_bg.wasm (~1 MB), dist/webpify.zip
 cargo test          # native unit tests of the Rust pipeline
 node --experimental-wasm-exnref tests/wasm-smoke.mjs path/to/photo.jpg   # the built .wasm, in Node
-node --experimental-wasm-exnref tests/background-test.mjs                 # popup flows in background.js, faked browser APIs
+node --js-base-64 --experimental-wasm-exnref tests/background-test.mjs    # popup flows and the video injection in background.js, faked browser APIs (Node 24 needs the base64 flag)
+node tests/video-test.mjs         # the video converter's decisions (what to keep, remux or transcode)
+node tests/browser-smoke.mjs      # converts sample videos through the real extension in a headless Chromium or Firefox, checks them with ffprobe (needs ffmpeg)
+node scripts/vendor.mjs --check   # extension/vendor/ is the unmodified mediabunny release that package.json pins
+node scripts/vendor.mjs           # fetch that release into extension/vendor/ (after changing the version in package.json)
 ./release.sh        # all release packages in dist/ (what the GitHub workflow publishes)
 node scripts/package.mjs safari   # dist/safari/ only, to load in Safari (after ./build.sh)
 scripts/render-icons.sh   # re-render extension/icons/ from assets/*.svg (needs Inkscape)
@@ -75,6 +89,10 @@ The build is reproducible: the same commit gives a byte-identical `extension/pkg
 5. Run `node scripts/package.mjs firefox` (Node 22 or later). `dist/firefox/` is then identical to the submitted Firefox package.
 
 Only `pkg/webpify_bg.wasm` and `pkg/webpify.js` are generated. Every other file in the package is copied as-is from `extension/`; only `manifest.json` is trimmed per browser by `scripts/package.mjs`.
+
+The browser smoke test loads the extension into a headless browser, picks synthetic sample videos on the demo page and checks what the page received with ffprobe and a full ffmpeg decode (`--only <name>` runs one sample, `--verbose` prints the extension's console lines as they come). It drives Chromium, Brave or Edge over the DevTools protocol and Firefox or Zen over Marionette (`--browser "flatpak run org.mozilla.firefox"`); Google-branded Chrome ignores `--load-extension` since version 137, so it can't be used, but the shipped extension runs the same code in it. Headless browsers have no GPU, so the HEVC sample is expected to be kept.
+
+`extension/vendor/mediabunny.js` is the unmodified `dist/bundles/mediabunny.cjs` of the [mediabunny](https://www.npmjs.com/package/mediabunny) release that `package.json` pins (its licence is next to it), under a `.js` name because `scripting.executeScript` injects nothing else. `node scripts/vendor.mjs --check` fetches that release from the npm registry and confirms the file is identical; no `npm install` is involved.
 
 ## Load the extension (development)
 
@@ -106,6 +124,7 @@ python3 -m http.server 8000 --directory demo
    - Sections 1–3 (plain input, React, shadow DOM) should list `.webp` files with type `image/webp` and smaller sizes.
    - Section 4 (JPEG/PNG only) should keep the originals.
    - In section 5 (Dropzone.js), try both clicking and dragging files from your file manager.
+   - In section 6, pick a video: a phone clip or a screen recording. It should arrive as an `.mp4` of type `video/mp4`, smaller, and play in the preview. A compact MP4 arrives unchanged, with a notice saying so.
 
    A notice at the bottom of the page shows progress and savings.
 
@@ -120,9 +139,16 @@ Debugging: the background console is under *Inspect views: service worker* in Ch
 - Installing in Safari for everyday use. Safari only installs extensions that come inside a signed Mac app, which isn't built yet; for now webpify loads as a temporary extension.
 - `wasm-opt` size optimisation.
 - Animated images. GIFs pass through untouched.
+- Videos the browser can't decode through WebCodecs: HEVC (iPhone "High Efficiency" recordings) in Firefox, and on Linux Chrome without a VA-API GPU; anything on a Chromium built without proprietary codecs. They pass through unchanged, and the notice says why.
+- HDR videos (PQ or HLG), which would come out washed out as 8-bit H.264. They pass through unchanged.
+- Re-encoding sound to AAC in Firefox and in Chrome on Linux, which have no AAC encoder. Sound that is already AAC or Opus is copied as it is (nearly always the case); other sound becomes Opus there, which plays in Chrome and Firefox and, per Apple, in Safari 17 and later.
+- Containers mediabunny doesn't read (AVI, WMV, FLV) and videos over 2 GB pass through unchanged.
+- Firefox's H.264 encoder has open bugs (an invalid decoder description on Windows and Linux, shifted timestamps). The smoke test's files made by Firefox 159 on Linux decode cleanly with ffmpeg; the converted file itself is only checked for a plausible bitrate, not decoded back. Test on Firefox for Windows before relying on it there.
 
 ## License
 
 webpify is free software, licensed under the [GNU Affero General Public License v3.0 only](LICENSE) (`AGPL-3.0-only`). That licence comes from its WebP encoder, [zenwebp](https://crates.io/crates/zenwebp), which is `AGPL-3.0-only OR` commercial. Anyone who receives the extension is entitled to this source code. The source archive of each version is attached to its GitHub release.
+
+The video reader/writer, [mediabunny](https://github.com/Vanilagy/mediabunny), is included unmodified under the Mozilla Public License 2.0 (`extension/vendor/mediabunny.LICENSE`), which is compatible with the AGPL.
 
 The demo page bundles React and Dropzone.js (both MIT) in `demo/vendor/`. They are not part of the extension.

@@ -1,10 +1,11 @@
-// webpify options page: conversion settings and the sites list.
+// webpify options page: image and video settings and the sites list.
 // Everything is stored in storage.local; the background re-registers the
 // content script whenever the sites (or their permissions) change.
 const api = globalThis.browser ?? globalThis.chrome;
 const { DEFAULTS, DEFAULT_SELECTOR } = globalThis.webpify;
 
 const settingsForm = document.getElementById("settings");
+const videoForm = document.getElementById("video-settings");
 const qualityValue = document.getElementById("quality-value");
 const sitesList = document.getElementById("sites");
 const noSites = document.getElementById("no-sites");
@@ -37,6 +38,10 @@ async function loadSettings() {
   fields.sharpGraphics.checked = settings.sharpGraphics;
   fields.keepIfLarger.checked = settings.keepIfLarger;
   qualityValue.value = settings.quality;
+  const video = videoForm.elements;
+  video.videos.checked = settings.videos;
+  video.videoMaxDimension.value = String(settings.videoMaxDimension);
+  video.videoQuality.value = settings.videoQuality;
 }
 
 settingsForm.addEventListener("input", async () => {
@@ -49,6 +54,16 @@ settingsForm.addEventListener("input", async () => {
     lossless: fields.lossless.checked,
     sharpGraphics: fields.sharpGraphics.checked,
     keepIfLarger: fields.keepIfLarger.checked,
+  });
+  flashSaved();
+});
+
+videoForm.addEventListener("input", async () => {
+  const video = videoForm.elements;
+  await api.storage.local.set({
+    videos: video.videos.checked,
+    videoMaxDimension: Number(video.videoMaxDimension.value) || 0,
+    videoQuality: video.videoQuality.value,
   });
   flashSaved();
 });

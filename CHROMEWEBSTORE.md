@@ -9,7 +9,7 @@
 
 **Extension name** and **summary** come from the package's manifest and can't be edited in the dashboard:
 - webpify
-- Converts images to WebP right before you upload them, on sites you choose. (76 characters; the limit is 132)
+- Converts images to WebP and videos to MP4 right before you upload them, on sites you choose. (92 characters; the limit is 132)
 
 **Detailed description**
 (The dashboard strips markdown. Paste as plain text with blank lines between paragraphs.)
@@ -18,6 +18,8 @@
 webpify makes the images you upload smaller by converting them to WebP the moment you pick them, before the website receives them.
 
 Choose the sites where it should work. On those sites, images you select with an upload button or drag onto an upload area are converted automatically, and the site uploads the smaller WebP files instead of the originals. It works with standard file upload fields and with common drag-and-drop upload areas.
+
+Videos are converted too, to MP4 (H.264) with your browser's own encoder, scaled to 1080p and 30 frames per second at most, with the sound kept as it is. A video that is already a compact MP4 is left alone. The notice shows the progress, with a Cancel link, and videos your browser can't read are uploaded unchanged.
 
 Settings let you pick the quality, a maximum width and height for large photos, and lossless conversion. Screenshots, logos and other graphics are kept sharp automatically. If a WebP would come out larger than the original, the original is kept. Photos keep their colour profile, so colours stay true, and location and camera details are removed. A small notice at the bottom of the page shows how many images were converted and how much space was saved.
 
@@ -37,7 +39,7 @@ Productivity › Tools
 **Single purpose** (Privacy tab)
 
 ```
-webpify converts images to the WebP format right before the user uploads them, on websites the user has chosen. When the user picks or drops JPEG, PNG or BMP images in an upload field on one of those sites, webpify converts them on the device and hands the smaller WebP files to the site's own upload. Every other part of the extension serves this purpose: the toolbar popup turns conversion on or off for the current site and can pause it for 10 minutes, and the settings page sets the quality, the maximum image size and the list of sites.
+webpify converts images to the WebP format, and videos to the MP4 format, right before the user uploads them, on websites the user has chosen. When the user picks or drops JPEG, PNG or BMP images, or MP4, MOV, WebM or MKV videos, in an upload field on one of those sites, webpify converts them on the device and hands the smaller files to the site's own upload. Every other part of the extension serves this purpose: the toolbar popup turns conversion on or off for the current site and can pause it for 10 minutes, and the settings page sets the quality, the maximum size and the list of sites.
 ```
 
 **Primary language**
@@ -67,7 +69,7 @@ Upload the screenshots in that order. `node store/chrome/src/render.mjs` renders
 | `alarms` | permissions | Ends a pause the user starts from the toolbar ("Pause for 10 minutes") on time, even if the browser stopped the background in between. |
 | `*://*/*` | optional_host_permissions | Not granted at install. When the user turns webpify on for a site, from the toolbar icon or the settings, the extension asks for access to that one site. It needs this access to see the images chosen in that site's upload fields and to hand back the converted WebP files. The user can revoke it at any time. |
 
-**Are you using remote code?** No, I am not using remote code. All code ships in the package. The image converter is a WebAssembly module compiled from the Rust source in the public repository (`src/`). Builds are reproducible: `./build.sh` on the tagged commit produces an identical `.wasm`.
+**Are you using remote code?** No, I am not using remote code. All code ships in the package. The image converter is a WebAssembly module compiled from the Rust source in the public repository (`src/`). Builds are reproducible: `./build.sh` on the tagged commit produces an identical `.wasm`. The video reader/writer is the mediabunny library (MPL-2.0), included unmodified (as `vendor/mediabunny.js`) from its npm release; the video codecs are the browser's own, through the WebCodecs API.
 
 ## Privacy and data use
 
@@ -108,7 +110,8 @@ No account is needed. webpify does nothing until it is turned on for a site, so 
 2. Click the webpify icon in the toolbar, turn on "Convert uploads on this site", and click Allow when Chrome asks for access to the site. Only that one site is requested.
 3. In section 1 ("Plain input"), choose one or more JPEG or PNG photos. The page lists the files it received: .webp files of type image/webp, smaller than the originals. A notice at the bottom of the page shows the savings.
 4. Section 4 only accepts JPEG and PNG, so webpify leaves those files unchanged on purpose.
-5. Settings (quality, maximum size, the site list) are under "Open settings" in the same popup.
+5. In section 6, choose a video (an H.264 MP4 or MOV, or a WebM). It arrives as an .mp4 of type video/mp4, smaller, and plays in the preview; the notice shows the progress and the savings. A video that is already a compact MP4 arrives unchanged, and the notice says so.
+6. Settings (quality, maximum size, videos, the site list) are under "Open settings" in the same popup.
 
 The converter is WebAssembly compiled from the Rust source in https://github.com/bidgrupa/webpify (src/); the build is reproducible with ./build.sh. Images are converted on the device and never sent anywhere by the extension.
 ```
@@ -135,6 +138,8 @@ The converter is WebAssembly compiled from the Rust source in https://github.com
 ### Known limitations
 - Paste uploads, uploads through the browser's newer file-picker API, and inputs inside closed shadow roots aren't converted; those files pass through unchanged.
 - Animated GIFs and folders pass through unchanged.
+- Videos the browser can't decode (HEVC from iPhones in Firefox, and in Chrome on Linux without a hardware decoder), HDR videos, videos over 2 GB and containers such as AVI pass through unchanged, with a notice saying why.
+- Sound is copied as it is when it is AAC or Opus; other sound is re-encoded to AAC where the browser has an AAC encoder (Windows and macOS), otherwise to Opus.
 
 ### Rejection history
 None yet.

@@ -48,7 +48,7 @@ async function render() {
     } else if (paused) {
       siteHelp.textContent = `On, but paused until ${clock(settings.pausedUntil)}.`;
     } else {
-      siteHelp.textContent = "Images you upload here are converted to WebP.";
+      siteHelp.textContent = "Images and videos you upload here are converted.";
     }
   }
 

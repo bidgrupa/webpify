@@ -13,7 +13,8 @@
       <p class="lead">
         Each section shows the files the page received from its file input, as its own upload code
         would see them. With webpify enabled for this site, images in sections 1–3 and 5 arrive as
-        <code>.webp</code>. Section 4 only accepts JPEG and PNG, so webpify leaves it alone.
+        <code>.webp</code> and videos in section 6 as <code>.mp4</code>. Section 4 only accepts JPEG
+        and PNG, so webpify leaves it alone.
       </p>
 
       <section class="card">
@@ -58,6 +59,18 @@
         </p>
         <form action="/upload" id="dropzone-demo" class="dropzone"></form>
         <div id="dropzone-output" class="output"></div>
+      </section>
+
+      <section class="card">
+        <h2>6. Video</h2>
+        <p class="muted">
+          <code>&lt;input type="file" accept="video/*" multiple&gt;</code>. With webpify on, videos
+          arrive as H.264 <code>.mp4</code> files, at most 1080p and 30 fps. A video that already is
+          a compact MP4 arrives unchanged, and so does one this browser can't read (an iPhone HEVC
+          video in Firefox, for example); the notice says why.
+        </p>
+        <input id="video-input" type="file" accept="video/*" multiple />
+        <div id="video-output" class="output"></div>
       </section>
     </main>
 

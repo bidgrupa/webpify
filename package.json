@@ -1,0 +1,13 @@
+{
+  "name": "webpify",
+  "private": true,
+  "description": "Browser extension that converts images to WebP and videos to MP4 right before upload. The Rust/WASM image converter is built by build.sh; this file pins the JavaScript library vendored into extension/vendor/.",
+  "license": "AGPL-3.0-only",
+  "dependencies": {
+    "mediabunny": "1.64.0"
+  },
+  "scripts": {
+    "vendor": "node scripts/vendor.mjs",
+    "vendor:check": "node scripts/vendor.mjs --check"
+  }
+}

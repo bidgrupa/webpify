@@ -1,6 +1,7 @@
-// webpify background (Chrome: module service worker, Firefox: event page).
-// 1. Runs the Rust/WASM converter for files sent by content.js.
-// 2. Keeps content.js registered on the sites the user added and granted.
+// webpify background (Chrome: module service worker, Firefox and Safari: event page).
+// 1. Runs the Rust/WASM image converter for files sent by content.js.
+// 2. Injects the video converter into a page the first time a video is picked there.
+// 3. Keeps content.js registered on the sites the user added and granted.
 import "./shared.js"; // globalThis.webpify: DEFAULT_SELECTOR
 import init, { convertToWebp, ensureReady } from "./pkg/webpify.js";
 
@@ -30,6 +31,23 @@ async function convert({ file, base64, options }) {
   ensureReady(); // rebuilds the instance if an earlier call panicked
   const bytes = convertToWebp(input, options.quality, options.maxDimension, options.lossless, options.sharpGraphics !== false);
   return asText ? { ok: true, base64: bytes.toBase64() } : { ok: true, bytes };
+}
+
+// --- Video converter -----------------------------------------------------------
+
+// Videos are converted inside the page: WebCodecs (the browser's codecs) isn't available to
+// service workers, and Safari can't pass a video through a message. content.js asks for the
+// converter when a video is first picked, and it's injected into that frame. Both files are
+// plain scripts: the library defines a global `Mediabunny`, which video.js uses.
+const VIDEO_FILES = ["vendor/mediabunny.js", "video.js"];
+
+async function loadVideoConverter(sender) {
+  if (!sender?.tab) throw new Error("the request didn't come from a tab");
+  await api.scripting.executeScript({
+    target: { tabId: sender.tab.id, frameIds: [sender.frameId ?? 0] },
+    files: VIDEO_FILES,
+  });
+  return { ok: true };
 }
 
 // --- Styles for the on-page notice -------------------------------------------
@@ -83,15 +101,17 @@ async function finishPendingSite() {
   }
 }
 
-api.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+api.runtime.onMessage.addListener((message, sender, sendResponse) => {
   const work =
     message?.type === "convert"
       ? convert(message)
-      : message?.type === "ui-css"
-        ? loadUiCss().then((css) => ({ ok: true, css }))
-        : message?.type === "enable-site"
-          ? rememberPendingSite(message.pattern, message.tabId).then(() => ({ ok: true }))
-          : null;
+      : message?.type === "load-video"
+        ? loadVideoConverter(sender)
+        : message?.type === "ui-css"
+          ? loadUiCss().then((css) => ({ ok: true, css }))
+          : message?.type === "enable-site"
+            ? rememberPendingSite(message.pattern, message.tabId).then(() => ({ ok: true }))
+            : null;
   if (!work) return false;
   work.then(sendResponse, (error) => sendResponse({ ok: false, error: String(error?.message ?? error) }));
   return true; // keep the channel open for the async response
