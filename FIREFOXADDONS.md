@@ -26,9 +26,9 @@ webpify
 **Add-on URL**
 `https://addons.mozilla.org/firefox/addon/webpify/` (slug: `webpify`)
 
-**Summary** (177 of 250 characters)
+**Summary** (195 of 250 characters)
 ```
-Converts images to WebP right before you upload them, on sites you choose. The conversion runs on your device, nothing is sent anywhere, and the site receives the smaller files.
+Converts images to WebP and videos to MP4 right before you upload them, on sites you choose. The conversion runs on your device, nothing is sent anywhere, and the site receives the smaller files.
 ```
 
 **Description** (line breaks are kept)
@@ -36,6 +36,8 @@ Converts images to WebP right before you upload them, on sites you choose. The c
 webpify makes the images you upload smaller by converting them to WebP the moment you pick them, before the website receives them.
 
 Choose the sites where it should work. On those sites, images you select with an upload button or drag onto an upload area are converted automatically, and the site uploads the smaller WebP files instead of the originals. It works with standard file upload fields and with common drag-and-drop upload areas such as Dropzone.js.
+
+Videos are converted too, to MP4 (H.264) with your browser's own encoder, scaled to 1080p and 30 frames per second at most, with the sound kept as it is. A video that is already a compact MP4 is left alone. The notice shows the progress, with a Cancel link, and videos your browser can't read are uploaded unchanged. Firefox can't read HEVC (iPhone "High Efficiency") videos, so those are uploaded as they are.
 
 Settings let you pick the quality, a maximum width and height for large photos, and lossless conversion. Screenshots, logos and other graphics are kept sharp automatically. If a WebP would come out larger than the original, the original is kept. Photos keep their colour profile, so colours stay true, and location and camera details are removed. A small notice at the bottom of the page shows how many images were converted and how much space was saved.
 
@@ -46,7 +48,7 @@ How to use it:
 
 Privacy: images are converted on your device and are never sent anywhere by the extension. It has no analytics and makes no network requests of its own. It can only see the sites you add, and only after you allow it.
 
-The converter is written in Rust and compiled to WebAssembly. webpify is free software under the AGPL-3.0; the source code is at https://github.com/bidgrupa/webpify
+The image converter is written in Rust and compiled to WebAssembly; videos are read and written by the mediabunny library (MPL-2.0) with Firefox's own codecs. webpify is free software under the AGPL-3.0; the source code is at https://github.com/bidgrupa/webpify
 ```
 
 **Experimental:** not ticked. **Requires payment, non-free services or software, or additional hardware:** not ticked.

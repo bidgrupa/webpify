@@ -70,6 +70,12 @@ jobs:
         with:
           node-version: 24
 
+      - name: Check the vendored video library
+        run: node scripts/vendor.mjs --check
+
+      - name: Test the video converter's decisions
+        run: node tests/video-test.mjs
+
       - name: Package the source code
         run: node scripts/package.mjs source
 

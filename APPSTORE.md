@@ -58,6 +58,8 @@ webpify makes the images you upload smaller by converting them to WebP the momen
 
 Choose the sites where it should work. On those sites, images you select with an upload button or drag onto an upload area are converted automatically, and the site uploads the smaller WebP files instead of the originals. It works with standard file upload fields and with common drag-and-drop upload areas.
 
+Videos are converted too, to MP4 (H.264) with your Mac's own encoder, scaled to 1080p and 30 frames per second at most, with the sound kept as it is. A video that is already a compact MP4 is left alone. The notice shows the progress, with a Cancel link, and videos your browser can't read are uploaded unchanged.
+
 Settings let you pick the quality, a maximum width and height for large photos, and lossless conversion. Screenshots, logos and other graphics are kept sharp automatically. If a WebP would come out larger than the original, the original is kept. Photos keep their colour profile, so colours stay true, and location and camera details are removed. A small notice at the bottom of the page shows how many images were converted and how much space was saved.
 
 How to use it:
@@ -95,7 +97,8 @@ No account is needed. webpify does nothing until it is turned on for a site, so 
 3. Click the webpify button in Safari's toolbar, turn on "Convert uploads on this site", and allow access when Safari asks. Only that one site is requested.
 4. In section 1 ("Plain input"), choose one or more JPEG or PNG photos. The page lists the files it received: .webp files of type image/webp, smaller than the originals. A notice at the bottom of the page shows the savings.
 5. Section 4 only accepts JPEG and PNG, so webpify leaves those files unchanged on purpose.
-6. Settings (quality, maximum size, the site list) are under "Open settings" in the same popup.
+6. In section 6, choose a video (an H.264 MP4 or MOV, or a WebM). It arrives as an .mp4 of type video/mp4, smaller, and plays in the preview; the notice shows the progress and the savings. A video that is already a compact MP4 arrives unchanged, and the notice says so.
+7. Settings (quality, maximum size, videos, the site list) are under "Open settings" in the same popup.
 
 Site access: the extension lists all sites as an optional permission because the user can choose any site, but nothing is granted at install. It asks Safari for access to one site at a time, when the user turns it on there, and the user can revoke it in Safari's settings.
 
@@ -127,6 +130,8 @@ webpify is a Safari extension made by BID grupa for its employees and the client
 ### Known limitations
 - Paste uploads, uploads through the browser's newer file-picker API, and inputs inside closed shadow roots aren't converted; those files pass through unchanged.
 - Animated GIFs, HEIC photos and folders pass through unchanged.
+- Videos the browser can't decode (HEVC from iPhones in Firefox, and in Chrome on Linux without a hardware decoder), HDR videos, videos over 2 GB and containers such as AVI pass through unchanged, with a notice saying why.
+- Sound is copied as it is when it is AAC or Opus; other sound is re-encoded to AAC where the browser has an AAC encoder (Windows and macOS), otherwise to Opus.
 
 ### Rejection history
 None yet.

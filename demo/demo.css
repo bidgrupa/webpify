@@ -84,12 +84,19 @@ td.name {
 }
 
 /* Checkerboard so transparency is visible. */
-td img {
+td img,
+td video {
   display: block;
   width: 64px;
   height: 64px;
   object-fit: contain;
   background: repeating-conic-gradient(#ccc 0 25%, #fff 0 50%) 0 0 / 12px 12px;
+}
+
+/* A video preview is wider, so its controls fit. */
+td video {
+  width: 160px;
+  height: 90px;
 }
 
 .webp {

@@ -19,7 +19,7 @@
         </svg>
         <div>
           <h1>webpify</h1>
-          <p>Converts the images you upload to WebP, on the sites you choose, before the site receives them.</p>
+          <p>Converts the images you upload to WebP and the videos to MP4, on the sites you choose, before the site receives them.</p>
         </div>
       </div>
     </header>
@@ -94,6 +94,38 @@
             <span class="switch-label">Lossless</span>
             <span class="switch-help">Keeps every pixel exactly. Files are bigger and the quality setting is ignored.</span>
           </label>
+        </form>
+      </section>
+
+      <section class="group" aria-labelledby="videos-heading">
+        <div class="group-head">
+          <h2 id="videos-heading">Videos</h2>
+          <p>Videos become H.264 MP4 files, made with your browser's own encoder. The sound is kept as it is whenever an MP4 can hold it.</p>
+        </div>
+        <form id="video-settings" class="group-body">
+          <label class="switch">
+            <input name="videos" type="checkbox" role="switch" />
+            <span class="switch-label">Convert videos to MP4</span>
+            <span class="switch-help">A video that is already a compact MP4 is left alone. One this browser can't read, such as an iPhone HEVC video in Firefox, is uploaded as it is, and the notice says so.</span>
+          </label>
+          <div class="field">
+            <label for="video-max-dimension">Largest size</label>
+            <select id="video-max-dimension" name="videoMaxDimension" class="select select--plain">
+              <option value="1920">1080p (1920 px on the long side)</option>
+              <option value="1280">720p (1280 px on the long side)</option>
+              <option value="0">Keep the original size</option>
+            </select>
+            <p class="help">Bigger videos are scaled down to fit. Frame rates above 30 are brought down to 30.</p>
+          </div>
+          <div class="field">
+            <label for="video-quality">Quality</label>
+            <select id="video-quality" name="videoQuality" class="select select--plain">
+              <option value="lower">Lower: smallest files</option>
+              <option value="standard">Standard: about 3 Mbit/s for 1080p</option>
+              <option value="higher">Higher: bigger files</option>
+            </select>
+            <p class="help">Standard suits videos shown on web pages. If the MP4 wouldn't be smaller than the original, the original is kept.</p>
+          </div>
         </form>
       </section>
     </main>

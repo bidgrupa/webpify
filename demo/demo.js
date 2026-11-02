@@ -8,7 +8,7 @@ function formatBytes(bytes) {
 
 /** Render `files` as a table (preview, name, type, size, dimensions) into `container`. */
 async function renderFileList(container, files) {
-  for (const img of container.querySelectorAll("img")) URL.revokeObjectURL(img.src);
+  for (const media of container.querySelectorAll("img, video")) URL.revokeObjectURL(media.src);
   if (files.length === 0) {
     container.replaceChildren();
     return;
@@ -20,12 +20,22 @@ async function renderFileList(container, files) {
   const body = table.createTBody();
   for (const file of files) {
     const row = body.insertRow();
-    const preview = document.createElement("img");
-    preview.alt = "";
+    const isVideo = file.type.startsWith("video/");
+    const preview = document.createElement(isVideo ? "video" : "img");
     const dimensions = document.createElement("td");
-    preview.addEventListener("load", () => {
-      dimensions.textContent = `${preview.naturalWidth} × ${preview.naturalHeight}`;
-    });
+    if (isVideo) {
+      preview.muted = true;
+      preview.controls = true;
+      preview.preload = "metadata";
+      preview.addEventListener("loadedmetadata", () => {
+        dimensions.textContent = `${preview.videoWidth} × ${preview.videoHeight}, ${preview.duration.toFixed(1)} s`;
+      });
+    } else {
+      preview.alt = "";
+      preview.addEventListener("load", () => {
+        dimensions.textContent = `${preview.naturalWidth} × ${preview.naturalHeight}`;
+      });
+    }
     preview.src = URL.createObjectURL(file);
     row.insertCell().append(preview);
 
@@ -34,7 +44,7 @@ async function renderFileList(container, files) {
     name.textContent = file.name;
     const type = row.insertCell();
     type.textContent = file.type || "(unknown)";
-    if (file.type === "image/webp") type.className = "webp";
+    if (file.type === "image/webp" || file.type === "video/mp4") type.className = "webp";
     row.insertCell().textContent = formatBytes(file.size);
     row.append(dimensions);
   }
@@ -49,10 +59,11 @@ async function renderFileList(container, files) {
   container.replaceChildren(table, total);
 }
 
-// 1 and 4: plain inputs with change listeners.
+// 1, 4 and 6: plain inputs with change listeners.
 for (const [inputId, outputId] of [
   ["plain-input", "plain-output"],
   ["strict-input", "strict-output"],
+  ["video-input", "video-output"],
 ]) {
   const input = document.getElementById(inputId);
   const output = document.getElementById(outputId);

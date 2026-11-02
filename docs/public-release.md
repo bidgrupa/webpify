@@ -12,7 +12,7 @@ webpify is shared internally through GitHub Releases (see [RELEASING.md](../RELE
 
 ## Before the first store submission
 
-- **Licence.** The extension is AGPL-3.0-only because of zenwebp, so the source has to be available to everyone who gets it. The release workflow attaches the source zip to every release; also link the repository from the store listing. If the AGPL ever becomes a problem: zenwebp 0.1.0–0.2.1 were MIT/Apache (an older, slower encoder), or Imazen sells a commercial licence.
+- **Licence.** The extension is AGPL-3.0-only because of zenwebp, so the source has to be available to everyone who gets it. The release workflow attaches the source zip to every release; also link the repository from the store listing. If the AGPL ever becomes a problem: zenwebp 0.1.0–0.2.1 were MIT/Apache (an older, slower encoder), or Imazen sells a commercial licence. The video library, mediabunny, is MPL-2.0 (compatible with the AGPL and with the stores); it ships unmodified with its licence file in `extension/vendor/`.
   - **Mac App Store:** the App Store's terms are widely considered incompatible with the GPL family, the AGPL included, and BID doesn't hold zenwebp's copyright, so it can't grant an exception itself. Before the first App Store submission, get Imazen's written permission or their commercial licence, or a lawyer's OK.
 - **Listing text.** [CHROMEWEBSTORE.md](../CHROMEWEBSTORE.md) has the description, single purpose, permission justifications and data-use answers, ready to paste. [FIREFOXADDONS.md](../FIREFOXADDONS.md) and [APPSTORE.md](../APPSTORE.md) do the same for the other two stores.
 - **Privacy policy.** [PRIVACY.md](../PRIVACY.md). Its GitHub URL (`https://github.com/bidgrupa/webpify/blob/main/PRIVACY.md`) works as the policy link (the repository is public).
@@ -192,5 +192,6 @@ Mozilla's reviewers must get byte-identical output from the source zip. This is 
 - `Cargo.lock` is committed, and the build uses `--locked`.
 - `build.sh` maps local paths away with `--remap-path-prefix`.
 - The wasm-bindgen CLI is pinned to 0.2.129.
+- `extension/vendor/mediabunny.js` is committed and is the unmodified npm release pinned in `package.json`; `node scripts/vendor.mjs --check` (run by the release workflow) confirms it. AMO allows third-party libraries only as unmodified release files and compares them with the published package.
 
 Checked for v0.3.1: the `.wasm` in the GitHub release is byte-identical to a local build, and rebuilding from the release's source zip in a fresh folder (build.sh, then package.mjs) gives a Firefox package identical to the one submitted to AMO. ARM64 doesn't reproduce it: Cargo's hash of each crate includes its proc macros, which are built for the build machine, and those hashes decide the order of functions in the `.wasm`. Changing only how the proc macros are built changes the `.wasm` at the same byte as the ARM64 build did, and stable Cargo has no setting to avoid it, so x86_64 is required. The reviewer steps are in the README under "Building from source".

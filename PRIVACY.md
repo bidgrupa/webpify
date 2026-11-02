@@ -1,14 +1,14 @@
 # Privacy policy for webpify
 
-Last updated: 2026-10-13
+Last updated: 2026-10-30
 
-webpify converts images to WebP on your own device, right before you upload them on websites you have chosen. It does not collect, store or send any personal data.
+webpify converts images to WebP and videos to MP4 on your own device, right before you upload them on websites you have chosen. It does not collect, store or send any personal data.
 
-## Images you upload
+## Images and videos you upload
 
-When you pick or drop images in an upload field on a site you added in webpify's settings, the extension converts them inside your browser. The images are never sent anywhere by webpify. The converted files go only where you were already uploading them: to the website you are using, as part of your own upload.
+When you pick or drop images or videos in an upload field on a site you added in webpify's settings, the extension converts them inside your browser. They are never sent anywhere by webpify. The converted files go only where you were already uploading them: to the website you are using, as part of your own upload.
 
-The converted files keep the original's colour profile. Other embedded information, such as camera details and the location where a photo was taken, is removed.
+Converted images keep the original's colour profile. Other embedded information, such as camera details and the location where a photo was taken, is removed. Converted videos keep their picture and sound; the recording's metadata, such as the location and the device, is removed.
 
 ## Settings
 
@@ -16,6 +16,7 @@ Your settings are stored in your browser's local extension storage on this devic
 - conversion quality
 - maximum image size
 - the lossless, "keep the original" and "keep graphics sharp" options
+- whether videos are converted, their largest size and quality
 - the list of sites and upload fields
 - when a pause you started from the toolbar ends
 

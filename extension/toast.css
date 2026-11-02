@@ -4,9 +4,18 @@
  * background.js). Values come from styles/tokens.css.
  */
 
-/* Text only (no Undo or link), so the right padding matches the left. */
-.toast {
+/* Text only (no link), so the right padding matches the left. */
+.toast:not(:has(.toast-link)) {
   padding-right: 18px;
+}
+
+/* The Cancel link while a video converts: overlay.css styles .toast-link for an <a>, this one is a
+   <button>. */
+.toast button.toast-link {
+  padding: 4px 6px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
 }
 
 /* overlay.css lifts the toast above a launcher dock below 1000px; webpify has no dock. */
@@ -16,7 +25,7 @@
   }
 }
 
-/* One segment per image while converting. */
+/* One segment per file while converting. */
 .toast .progress-track {
   width: 220px;
   max-width: 100%;
