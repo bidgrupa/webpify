@@ -127,8 +127,8 @@ The converter is WebAssembly compiled from the Rust source in https://github.com
 
 | Version | Date | Changes | Status |
 |---|---|---|---|
-| 0.5.0 | 2026-11-02 | Videos are converted to MP4 (H.264, at most 1080p and 30 fps) with the browser's own encoder; Videos section in the settings. New third-party library mediabunny (MPL-2.0, unmodified); no new permissions. | Not submitted |
-| 0.4.0 | 2026-10-29 | Settings page: the Lauris CMS shortcuts are gone; add a site by typing its address. | In review (submitted 2026-10-29) |
+| 0.5.0 | 2026-11-02 | Videos are converted to MP4 (H.264, at most 1080p and 30 fps) with the browser's own encoder; Videos section in the settings. New third-party library mediabunny (MPL-2.0, unmodified); no new permissions. | In review (submitted 2026-11-02) |
+| 0.4.0 | 2026-10-29 | Settings page: the Lauris CMS shortcuts are gone; add a site by typing its address. | Review cancelled 2026-11-02; replaced by 0.5.0 |
 | 0.3.1 | 2026-10-14 | The Chrome package requires Chrome 148: older versions can't pass files to the converter. | In review (submitted 2026-10-14) |
 | 0.3.0 | 2026-10-13 | Toolbar popup to turn a site on or off and pause for 10 minutes; screenshots, logos and graphics kept sharp. New permissions: activeTab, alarms. | Internal (GitHub Releases) |
 | 0.2.0 | 2026-10-09 | Settings page and on-page notice in the bid look, Lauris CMS presets. | Internal (GitHub Releases) |
