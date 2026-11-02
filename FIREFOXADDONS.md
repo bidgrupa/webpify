@@ -1,6 +1,6 @@
 # addons.mozilla.org listing: webpify
 
-> Last updated: 2026-10-14
+> Last updated: 2026-11-02
 >
 > Everything the Firefox Add-on Developer Hub asks for, ready to paste, in the order the
 > submission asks for it. The steps around it are in
@@ -93,6 +93,7 @@ The same images as on the Chrome Web Store; `node store/chrome/src/render.mjs` r
 
 | Version | Date | Changes | Status |
 |---|---|---|---|
+| 0.5.0 | 2026-11-02 | Videos are converted to MP4 (H.264, at most 1080p and 30 fps) with Firefox's own encoder; HEVC videos pass through unchanged. Videos section in the settings. New third-party library mediabunny (MPL-2.0, unmodified); no new permissions. | Not submitted |
 | 0.4.0 | 2026-10-29 | Settings page: the Lauris CMS shortcuts are gone; add a site by typing its address. | In review (submitted 2026-10-29) |
 | 0.3.1 | 2026-10-14 | First version on addons.mozilla.org. | In review (submitted 2026-10-14) |
 

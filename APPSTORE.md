@@ -123,7 +123,7 @@ webpify is a Safari extension made by BID grupa for its employees and the client
 
 | Version | Date | Changes | Status |
 |---|---|---|---|
-| 0.4.0 | | First Mac App Store version: runs in Safari 26 and later. | Not submitted |
+| 0.5.0 | | First Mac App Store version: runs in Safari 26 and later; converts videos to MP4. | Not submitted |
 
 ## Review notes
 
